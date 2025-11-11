@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\c\u002B\u002B Projects\\School\\Final Project\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B95296B8-DFFD-4264-8AB4-497B5B45B732}|Final Project.vcxproj|C:\\c\u002B\u002B Projects\\School\\Final Project\\Final Project.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{B95296B8-DFFD-4264-8AB4-497B5B45B732}|Final Project.vcxproj|solutionrelative:Final Project.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Final Project.cpp",
+              "DocumentMoniker": "C:\\c\u002B\u002B Projects\\School\\Final Project\\Final Project.cpp",
+              "RelativeDocumentMoniker": "Final Project.cpp",
+              "ToolTip": "C:\\c\u002B\u002B Projects\\School\\Final Project\\Final Project.cpp",
+              "RelativeToolTip": "Final Project.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAFIEAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-19T16:38:49.262Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

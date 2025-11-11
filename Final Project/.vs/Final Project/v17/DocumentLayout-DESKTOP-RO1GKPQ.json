@@ -1,0 +1,38 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\migue\\OneDrive - UCNJ Students\\UCNJ Fall 2025\\Programming in C\u002B\u002B\\Final Project\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B95296B8-DFFD-4264-8AB4-497B5B45B732}|Final Project.vcxproj|C:\\Users\\migue\\OneDrive - UCNJ Students\\UCNJ Fall 2025\\Programming in C\u002B\u002B\\Final Project\\Final Project.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{B95296B8-DFFD-4264-8AB4-497B5B45B732}|Final Project.vcxproj|solutionrelative:Final Project.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Final Project.cpp",
+              "DocumentMoniker": "C:\\Users\\migue\\OneDrive - UCNJ Students\\UCNJ Fall 2025\\Programming in C\u002B\u002B\\Final Project\\Final Project.cpp",
+              "RelativeDocumentMoniker": "Final Project.cpp",
+              "ToolTip": "C:\\Users\\migue\\OneDrive - UCNJ Students\\UCNJ Fall 2025\\Programming in C\u002B\u002B\\Final Project\\Final Project.cpp*",
+              "RelativeToolTip": "Final Project.cpp*",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAAAHIAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-11T01:40:19.275Z",
+              "IsPinned": true,
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
