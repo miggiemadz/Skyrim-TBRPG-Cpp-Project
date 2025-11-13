@@ -737,15 +737,15 @@ public:
     }
 };
 
-class DraugrOverlord : public Enemy {
+class DraugrScourgeLord : public Enemy {
 public:
-    DraugrOverlord() {}
-    DraugrOverlord(const string name)
+    DraugrScourgeLord() {}
+    DraugrScourgeLord(const string name)
         : Enemy(name)
     {
-        this->totalHealth = 210;
+        this->totalHealth = 880;
         this->totalMagicka = 0;
-        this->totalStamina = 260;
+        this->totalStamina = 595;
 
         random_device rd;
         mt19937 gen(rd());
@@ -945,6 +945,75 @@ public:
             << "\nStamina: " << currentStamina << "/" << totalStamina << "\n"
             << "\nWeapon Stats:";
         equippedWeapon.DisplayWeaponInfo();
+    }
+};
+
+class Chest {
+private:
+    int lockPickTurns;
+    int successfullTurns;
+	vector<shared_ptr<int>> turnSequences;
+	shared_ptr<Loot> chestLoot;
+	shared_ptr<Loot> playerLoot;
+
+    int firstTurn;
+	int secondTurn;
+	int thirdTurn;
+
+public:
+	Chest(vector<shared_ptr<int>> sequences, shared_ptr<Loot> chestLoot, shared_ptr<Loot> playerLoot)
+		: turnSequences(sequences), successfullTurns(0), lockPickTurns(3), chestLoot(chestLoot), playerLoot(playerLoot)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+		firstTurn = uniform_int_distribution<>(0, 1)(gen);
+		secondTurn = uniform_int_distribution<>(0, 1)(gen);
+		thirdTurn = uniform_int_distribution<>(0, 1)(gen);
+    }
+
+    void AttemptUnlock(){
+        int playerAttempt;
+
+        while (successfullTurns < lockPickTurns) {
+			cout << "\nChoose your lockpick turn (0 = Left, 1 = Right): ";
+			cin >> playerAttempt;
+            
+            switch (successfullTurns) {
+                case 0:
+                    if (playerAttempt == firstTurn) {
+                        cout << "\nSuccessful turn!";
+                        successfullTurns++;
+                    }
+                    else {
+                        cout << "\nFailed turn. Try again.";
+						successfullTurns = 0;
+						playerLoot->setLockPickCount(playerLoot->getLockPickCount() - 1);
+                    }
+					break;
+                case 1:
+                    if (playerAttempt == secondTurn) {
+                        cout << "\nSuccessful turn!";
+                        successfullTurns++;
+                    }
+                    else {
+                        cout << "\nFailed turn. Try again.";
+                        successfullTurns = 0;
+                        playerLoot->setLockPickCount(playerLoot->getLockPickCount() - 1);
+                    }
+                    break;
+                case 2:
+                    if (playerAttempt == thirdTurn) {
+                        cout << "\nChest unlocked!";
+                        playerLoot->AddLoot(chestLoot);
+                        successfullTurns++;
+                    }
+                    else {
+                        cout << "\nFailed turn. Try again.";
+                        successfullTurns = 0;
+                        playerLoot->setLockPickCount(playerLoot->getLockPickCount() - 1);
+					}
+        }
     }
 };
 
@@ -1210,7 +1279,11 @@ void CreateRooms() {
 
     vector<shared_ptr<Enemy>> e1et = { e1e1, e1e2, e1e3 };
 
-    shared_ptr<Loot> e1el = make_shared<Loot>(uniform_int_distribution<>(18, 36)(gen), uniform_int_distribution<>(0, 6)(gen), uniform_int_distribution<>(0, 6)(gen));
+    shared_ptr<Loot> e1el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        uniform_int_distribution<>(0, 6)(gen),
+        uniform_int_distribution<>(0, 6)(gen)
+    );
 
     shared_ptr<Room> entrance = make_shared<Room>(player, e1et, e1el);
 
@@ -1226,7 +1299,11 @@ void CreateRooms() {
     cin.get();
 
     // Room 1
-    shared_ptr<Loot> r1l = make_shared<Loot>(uniform_int_distribution<>(0, 12)(gen), uniform_int_distribution<>(0,2)(gen), uniform_int_distribution<>(0, 2)(gen));
+    shared_ptr<Loot> r1l = make_shared<Loot>(
+        uniform_int_distribution<>(0, 12)(gen),
+        uniform_int_distribution<>(0,2)(gen),
+        uniform_int_distribution<>(0, 2)(gen)
+    );
 
     cout << "\nEntering the barrows, our traveler is met with a nasty scent that reaked of a familiar smell: death. "
         << "The entrance is a large hall with clear signs of ruin and lit by a dim light behind a large pillar in the center. "
@@ -1248,7 +1325,11 @@ void CreateRooms() {
 
     vector<shared_ptr<Enemy>> r1et = { r1e1, r1e2 };
 
-    shared_ptr<Loot> r1el = make_shared<Loot>(uniform_int_distribution<>(6, 24)(gen), uniform_int_distribution<>(0, 4)(gen), uniform_int_distribution<>(0, 4)(gen));
+    shared_ptr<Loot> r1el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 24)(gen),
+        uniform_int_distribution<>(0, 4)(gen),
+        uniform_int_distribution<>(0, 4)(gen)
+    );
 
     shared_ptr<Room> room1 = make_shared<Room>(player, r1et, r1el);
 
@@ -1264,28 +1345,48 @@ void CreateRooms() {
     cin.get();
 
     // Room 2.1
-    shared_ptr<Enemy> r21e1 = make_shared<Bandit>("Bandit 1");
+    shared_ptr<Enemy> r2_1e1 = make_shared<Bandit>("Bandit 1");
 
-    shared_ptr<Loot> r21el = make_shared<Loot>(uniform_int_distribution<>(6, 12)(gen), uniform_int_distribution<>(0, 2)(gen), uniform_int_distribution<>(0, 2)(gen));
+    shared_ptr<Loot> r2_1el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        uniform_int_distribution<>(0, 2)(gen),
+        uniform_int_distribution<>(0, 2)(gen)
+    );
 
-    vector<shared_ptr<Enemy>> r21et = { r21e1 };
+    vector<shared_ptr<Enemy>> r2_1et = { r2_1e1 };
 
-    shared_ptr<Room> room21 = make_shared<Room>(player, r21et, r21el);
+    shared_ptr<Room> room2_1 = make_shared<Room>(player, r2_1et, r2_1el);
 
-    room21->Battle();
+    room2_1->Battle();
 
     cout << "\nLoot Collected:\n"
-        << "- " << r21el->getGoldCount() << " Gold\n"
-        << "- " << r21el->getLockPickCount() << " Lockpicks\n"
-        << "- " << r21el->getHealthPotionCount() + r21el->getMagickaPotionCount() + r21el->getStaminaPotionCount() << " Potions";
+        << "- " << r2_1el->getGoldCount() << " Gold\n"
+        << "- " << r2_1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r2_1el->getHealthPotionCount() + r2_1el->getMagickaPotionCount() + r2_1el->getStaminaPotionCount() << " Potions";
     cin.get();
 
     // Room 2.2
-    shared_ptr<Enemy> r22e1 = make_shared<Skeever>("Skeever 1");
-    shared_ptr<Enemy> r22e2 = make_shared<Skeever>("Skeever 2");
-    shared_ptr<Enemy> r22e3 = make_shared<Skeever>("Skeever 3");
+    shared_ptr<Enemy> r2_2e1 = make_shared<Skeever>("Skeever 1");
+    shared_ptr<Enemy> r2_2e2 = make_shared<Skeever>("Skeever 2");
+    shared_ptr<Enemy> r2_2e3 = make_shared<Skeever>("Skeever 3");
 
-    vector<shared_ptr<Enemy>> r22et = { r22e1, r22e2, r22e3 };
+    shared_ptr<Loot> r2_2el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        uniform_int_distribution<>(0, 2)(gen),
+        uniform_int_distribution<>(0, 2)(gen)
+    );
+
+    vector<shared_ptr<Enemy>> r2_2et = { r2_2e1, r2_2e2, r2_2e3 };
+
+    shared_ptr<Room> room2_2 = make_shared<Room>(player, r2_2et, r2_2el);
+
+    room2_2->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r2_2el->getGoldCount() << " Gold\n"
+        << "- " << r2_2el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r2_2el->getHealthPotionCount() + r2_2el->getMagickaPotionCount() + r2_2el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
     // Room 3
     shared_ptr<Enemy> r3e1 = make_shared<WoundedFrostbiteSpider>("Wounded Frostbite Spider");
@@ -1293,10 +1394,49 @@ void CreateRooms() {
     vector<shared_ptr<Enemy>> r3et = { r3e1 };
     
     // Room 4
+    shared_ptr<Enemy> r4e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r4e2 = make_shared<Draugr>("Draugr 2");
+    shared_ptr<Enemy> r4e3 = make_shared<Draugr>("Draugr 3");
 
+    vector<shared_ptr<Enemy>> r4et = { r4e1, r4e2, r4e3 };
+
+    shared_ptr<Loot> r4el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room4 = make_shared<Room>(player, r4et, r4el);
+
+    room4->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r4el->getGoldCount() << " Gold\n"
+        << "- " << r4el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r4el->getHealthPotionCount() + r4el->getMagickaPotionCount() + r4el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
     // Room 5
+    shared_ptr<Enemy> r5e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r5e2 = make_shared<Draugr>("Draugr 2");
 
+    vector<shared_ptr<Enemy>> r5et = { r5e1, r5e2 };
+
+    shared_ptr<Loot> r5el = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room5 = make_shared<Room>(player, r5et, r5el);
+
+    room5->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r5el->getGoldCount() << " Gold\n"
+        << "- " << r5el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r5el->getHealthPotionCount() + r5el->getMagickaPotionCount() + r5el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
     // Room 6
 
@@ -1305,14 +1445,91 @@ void CreateRooms() {
 
 
     // Room 8
+    shared_ptr<Enemy> r8e1 = make_shared<RestlessDraugr>("Restless Draugr");
 
+    vector<shared_ptr<Enemy>> r8et = { r8e1 };
 
-    // Room 9
+    shared_ptr<Loot> r8el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        0,
+        0
+    );
 
+    shared_ptr<Room> room8 = make_shared<Room>(player, r8et, r8el);
+
+    room8->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r8el->getGoldCount() << " Gold\n"
+        << "- " << r8el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r8el->getHealthPotionCount() + r8el->getMagickaPotionCount() + r8el->getStaminaPotionCount() << " Potions";
+    cin.get();
+
+    // Room 9.1
+    shared_ptr<Enemy> r9_1e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r9_1e2 = make_shared<Draugr>("Draugr 2");
+    shared_ptr<Enemy> r9_1e3 = make_shared<Draugr>("Draugr 3");
+
+    vector<shared_ptr<Enemy>> r9_1et = { r9_1e1, r9_1e2, r9_1e3 };
+
+    shared_ptr<Loot> r9_1el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room9_1 = make_shared<Room>(player, r9_1et, r9_1el);
+
+    room9_1->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r9_1el->getGoldCount() << " Gold\n"
+        << "- " << r9_1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r9_1el->getHealthPotionCount() + r9_1el->getMagickaPotionCount() + r9_1el->getStaminaPotionCount() << " Potions";
+    cin.get();
+
+    // Room 9.2
+    shared_ptr<Enemy> r9_2e1 = make_shared<Draugr>("Draugr");
+    shared_ptr<Enemy> r9_2e2 = make_shared<RestlessDraugr>("Restless Draugr");
+
+    vector<shared_ptr<Enemy>> r9_2et = { r9_2e1, r9_2e2 };
+
+    shared_ptr<Loot> r9_2el = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room9_2 = make_shared<Room>(player, r9_2et, r9_2el);
+
+    room9_2->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r9_2el->getGoldCount() << " Gold\n"
+        << "- " << r9_2el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r9_2el->getHealthPotionCount() + r9_2el->getMagickaPotionCount() + r9_2el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
     // Room 10
+    shared_ptr<Enemy> r10e1 = make_shared<DraugrScourgeLord>("Draugr Scourge Lord");
 
+    vector<shared_ptr<Enemy>> r10et = { r10e1 };
 
+    shared_ptr<Loot> r10el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room10 = make_shared<Room>(player, r10et, r10el);
+
+    room10->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r10el->getGoldCount() << " Gold\n"
+        << "- " << r10el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r10el->getHealthPotionCount() + r10el->getMagickaPotionCount() + r10el->getStaminaPotionCount() << " Potions";
+    cin.get();
 }
 
 int main()
