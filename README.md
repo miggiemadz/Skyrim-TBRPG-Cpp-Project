@@ -22,7 +22,8 @@ management - Lockpicking puzzle - 10-room dungeon progression
 
 ### ⚔️ Turn-Based Combat
 
-Player actions include: - Attack\
+Player actions include: 
+- Attack\
 - Cast Spell\
 - Use Bag\
 - Inspect\
