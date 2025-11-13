@@ -1,3 +1,4 @@
 ﻿  Final Project.cpp
-C:\c++ Projects\School\Final Project\Final Project.cpp(283,1): warning C4715: 'Magic::DisplayStatus': not all control paths return a value
-  Final Project.vcxproj -> C:\c++ Projects\School\Final Project\x64\Debug\Final Project.exe
+C:\c++ Projects\School\Skyrim-TBRPG-Cpp-Project\Final Project\Final Project.cpp(432,40): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
+C:\c++ Projects\School\Skyrim-TBRPG-Cpp-Project\Final Project\Final Project.cpp(283,1): warning C4715: 'Magic::DisplayStatus': not all control paths return a value
+  Final Project.vcxproj -> C:\c++ Projects\School\Skyrim-TBRPG-Cpp-Project\Final Project\x64\Debug\Final Project.exe

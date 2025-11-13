@@ -290,20 +290,70 @@ public:
 
 class Loot {
 private:
-    int gold;
-    vector<Weapon> weapons;
-    int lockpicks;
+    int goldCount = 0;
+    int lockPickCount = 0;
+    int healthPotionCount = 0;
+    int magickaPotionCount = 0;
+    int staminaPotionCount = 0;
     
 public:
+    int getGoldCount() { return this->goldCount; }
+    int getLockPickCount() { return this->lockPickCount; }
+    int getHealthPotionCount() { return this->healthPotionCount; }
+    int getMagickaPotionCount() { return this->magickaPotionCount; }
+    int getStaminaPotionCount() { return this->staminaPotionCount; }
+
+    void setGoldCount(int value) { this->goldCount = value; }
+    void setLockPickCount(int value) { this->lockPickCount = value; }
+    void setHealthPotionCount(int value) { this->healthPotionCount = value; }
+    void setMagickaPotionCount(int value) { this->magickaPotionCount = value; }
+    void setStaminaPotionCount(int value) { this->staminaPotionCount = value; }
+
     Loot() {
 
     }
 
-    Loot(int gold, vector<Weapon> weapons, int lockpicks) 
-        : gold(gold), weapons(weapons), lockpicks(lockpicks)
+    Loot(int gold, int lockpicks, int potions) 
+        : goldCount(gold), lockPickCount(lockpicks)
     {
+        if (potions > 0) {
+            random_device rd;
+            mt19937 gen(rd());
 
+            for (int i = 0; i < potions; i++) {
+                int potionType = uniform_int_distribution<>(0, 2)(gen);
+                switch (potionType) {
+                case 0:
+                    setHealthPotionCount(getHealthPotionCount() + 1);
+                    break;
+                case 1:
+                    setMagickaPotionCount(getMagickaPotionCount() + 1);
+                    break;
+                case 2:
+                    setStaminaPotionCount(getStaminaPotionCount() + 1);
+                    break;
+                }
+            }
+        }
     }
+
+    void AddLoot(shared_ptr<Loot> loot) {
+        this->setGoldCount(this->getGoldCount() + loot->getGoldCount());
+        this->setLockPickCount(this->getLockPickCount() + loot->getLockPickCount());
+        this->setHealthPotionCount(this->getHealthPotionCount() + loot->getHealthPotionCount());
+        this->setMagickaPotionCount(this->getMagickaPotionCount() + loot->getMagickaPotionCount());
+        this->setStaminaPotionCount(this->getStaminaPotionCount() + loot->getStaminaPotionCount());
+    }
+
+    void DisplayLoot() {
+        cout << "\nLoot:"
+            << "\n - Gold: " << getGoldCount()
+            << "\n - Lockpicks: " << getLockPickCount()
+            << "\n - Health Potions: " << getHealthPotionCount()
+            << "\n - Magicka Potions: " << getMagickaPotionCount()
+            << "\n - Stamina Potions: " << getStaminaPotionCount() << "\n";
+    }
+
 };
 
 class Enemy {
@@ -375,10 +425,11 @@ public:
     }
 
     void Rest() {
-        currentStamina += 15;
+        currentStamina += 75;
         if (currentStamina > totalStamina)
             currentStamina = totalStamina;
-        cout << enemyName << " was too tired to move.\n";
+        cout << "\n" << enemyName << " was too tired to move.\n";
+        currentStamina += totalStamina * .5;
     }
     
     void DisplayEnemyInfo() {
@@ -721,11 +772,11 @@ private:
     Weapon equippedWeapon = Weapon(6);
     Armor equippedArmor;
     vector<Magic> knownSpells = { Magic(1), Magic(2), Magic(3), Magic(4) };
-    Loot inventory;
+    shared_ptr<Loot> inventory;
 
 public:
-    Player(string name)
-        : name(name), totalHealth(200), totalMagicka(150), totalStamina(200)
+    Player(string name, shared_ptr<Loot> loot)
+        : name(name), inventory(loot), totalHealth(200), totalMagicka(150), totalStamina(200)
     {
         currentHealth = totalHealth;
         currentMagicka = totalMagicka;
@@ -736,15 +787,16 @@ public:
     string getName() const { return name; }
     int getHealth() const { return currentHealth; }
     vector<Magic> getKnownSpells() const { return knownSpells; }
-
+    shared_ptr<Loot> getInventory() const { return inventory; }
     
 
     void Rest() {
-        currentStamina += 100;
-        currentMagicka += 75;
+        currentStamina += 50;
+        currentMagicka += 35;
         if (currentStamina > totalStamina)
             currentStamina = totalStamina;
-        cout << "Recovered some stamina!\n";
+        cout << " Recovered some stamina and magicka!";
+        cin.get();
     }
 
     // Core actions
@@ -759,13 +811,15 @@ public:
 
             if (critCheck == 10) {
                 damage += equippedWeapon.getWeaponCriticalDamage();
-                cout << name << " attacks " << target->getEnemyName()
+                cout << "\n" << name << " attacks " << target->getEnemyName()
                     << " for " << damage << " critical damage!\n";
+                cin.get();
             }
 
             else {
-                cout << name << " attacks " << target->getEnemyName()
+                cout << "\n" << name << " attacks " << target->getEnemyName()
                     << " for " << damage << " damage!\n";
+                cin.get();
             }
 
             currentStamina -= equippedWeapon.getWeaponStaminaCost();
@@ -783,22 +837,85 @@ public:
                     currentHealth = totalHealth;
                 }
 
-                cout << "\n" << name << " healed " << spell.getSpellHealing() << " health points.\n";
+                cout << "\n" << name << " healed " << spell.getSpellHealing() << " health points.";
+                cin.get();
             }
             else {
                 currentMagicka -= spell.getSpellMagickaCost();
-                cout << name << " casts " << spell.getSpellName()
-                    << " on " << target->getEnemyName() << "!\n";
+                cout << "\n" << name << " casts " << spell.getSpellName()
+                    << " on " << target->getEnemyName() << "!";
+                cin.get();
                 target->TakeDamage(spell.getSpellHealthDamage());
                 int statusValue = spell.getStatus();
                 target->setStatusCondition(statusValue);
 
-                cout << "\n" << target->getEnemyName() << " took " << spell.getSpellHealthDamage() << " damage and is now " << spell.DisplayStatus() << ".\n";
+                cout << "\n" << target->getEnemyName() << " took " << spell.getSpellHealthDamage() << " damage and is now " << spell.DisplayStatus() << ".";
+                cin.get();
             }
         }
 
         else {
-            cout << name << " doesn't have enough magicka!\n";
+            cout << "\n" << name << " doesn't have enough magicka!";
+            cin.get();
+        }
+    }
+
+    void UsePotion(int type) {
+        cin.ignore();
+        switch (type) {
+        case 0:
+            if (inventory->getHealthPotionCount() == 0) {
+                cout << "\nYou have no Health Potions.";
+                cin.get();
+            }
+            else if (currentHealth == totalHealth) {
+                cout << "\nYour health is already full.";
+                cin.get();
+            }
+            else {
+                inventory->setHealthPotionCount(inventory->getHealthPotionCount() - 1);
+                currentHealth += 100;
+                if (currentHealth > totalHealth) currentHealth = totalHealth;
+
+                cout << "\nTraveler used a Health Potion.";
+                cin.get();
+            }
+            break;
+        case 1:
+            if (inventory->getMagickaPotionCount() == 0) {
+                cout << "\nYou have no Magicka Potions.";
+                cin.get();
+            }
+            else if (currentMagicka == totalMagicka) {
+                cout << "\nYour magicka is already full.";
+                cin.get();
+            }
+            else {
+                inventory->setMagickaPotionCount(inventory->getMagickaPotionCount() - 1);
+                currentMagicka += 75;
+                if (currentMagicka > totalMagicka) currentMagicka = totalMagicka;
+
+                cout << "\nTraveler used a Magicka Potion.";
+                cin.get();
+            }
+            break;
+        case 2:
+            if (inventory->getStaminaPotionCount() == 0) {
+                cout << "\nYou have no Stamina Potions.";
+                cin.get();
+            }
+            else if (currentStamina == totalStamina) {
+                cout << "\nYour stamina is already full.";
+                cin.get();
+            }
+            else {
+                inventory->setStaminaPotionCount(inventory->getStaminaPotionCount() - 1);
+                currentStamina += 100;
+                if (currentStamina > totalStamina) currentStamina = totalStamina;
+
+                cout << "\nTraveler used a Stamina Potion.";
+                cin.get();
+            }
         }
     }
 
@@ -813,6 +930,7 @@ public:
         }
         else {
             cout << "\nPlayer has died...";
+            cin.get();
             return false;
         }
     }
@@ -830,22 +948,18 @@ public:
     }
 };
 
-
 class Room {
 private:
     shared_ptr<Player> player;
-    string roomIntro;
-    string roomConclusion;
     vector<shared_ptr<Enemy>> roomEnemies;
-    Loot roomLoot;
-    bool hasPuzzle;
+    shared_ptr<Loot> roomLoot;
     bool playerActed = false;
 
 public:
-    Room(shared_ptr<Player> player, string intro, string conclusion, vector<shared_ptr<Enemy>> enemies, Loot loot, bool hasPuzzle) 
-        : player(player), roomIntro(intro), roomConclusion(conclusion), roomEnemies(enemies), roomLoot(loot), hasPuzzle(hasPuzzle)
+    Room(shared_ptr<Player> player, vector<shared_ptr<Enemy>> enemies, shared_ptr<Loot> loot)
+        : player(player), roomEnemies(enemies), roomLoot(loot)
     {
-        
+
     }
 
     bool AllEnemiesDead() {
@@ -864,16 +978,13 @@ public:
                 if (roomEnemies[j]->getTotalStamina() > roomEnemies[j+1]->getTotalStamina()) {
                     swap(roomEnemies[j], roomEnemies[j+1]);
                 }
-
             }
         }
     }
 
-    int playerTurn = 0;
+    int playerTurn = 1;
 
     void Battle() {
-        cout << roomIntro << "\n";
-
         // Sort enemies by stamina before battle begins (higher stamina acts earlier)
         SortEnemiesByTurn();
 
@@ -897,7 +1008,6 @@ public:
                         int enemyHealth = roomEnemies[i]->getCurrentHealth();
 
                         if (enemyHealth < 0) enemyHealth = 0;
-
                         cout << i + 1 << ". " << roomEnemies[i]->getEnemyName()
                             << " (" << enemyHealth << " HP)\n";
                     }
@@ -906,11 +1016,18 @@ public:
                     cin >> targetIndex;
                     
                     if (targetIndex > 0 && targetIndex <= (int)roomEnemies.size()) {
-                        player->Attack(roomEnemies[targetIndex - 1]);
+                        if (roomEnemies[targetIndex - 1]->getCurrentHealth() > 0) {
+                            player->Attack(roomEnemies[targetIndex - 1]);
+                        }
+                        else {
+                            cout << "\nEnemy already dead.";
+                            cin.get();
+                        }
                     }
 
                     else {
-                        cout << "Invalid choice.\n";
+                        cout << "Invalid choice.";
+                        cin.get();
                     }
                     playerActed = true;
                     break;
@@ -918,7 +1035,8 @@ public:
 
                 case 2: { // Cast Spell
                     if (player->getKnownSpells().empty()) {
-                        cout << "\nYou don't know any spells!\n";
+                        cout << "\nYou don't know any spells!";
+                        cin.get();
                     }
                     else {
                         // Select target
@@ -951,12 +1069,29 @@ public:
                         }
 
                         else {
-                            cout << "Invalid choice.\n";
+                            cout << "Invalid choice.";
+                            cin.get();
                         }
                     }
                     playerActed = true;
                     break;
                 }
+                case 3: // Bag
+                    player->getInventory()->DisplayLoot();
+
+                    cout << "\n[1] Use Health Potion\n[2] Use Magicka Potion\n[3] Use Stamina Potion\n[0] Close Bag";
+                    cout << "\nPlayer Action: ";
+                    int potionType;
+                    cin >> potionType;
+
+                    if (potionType > 0 && potionType < 4) {
+                        player->UsePotion(potionType - 1);
+                    }
+                    else if (potionType != 0){
+                        cout << "\nInvalid Input.";
+                        cin.get();
+                    }
+                    break;
 
                 case 4: { // Inspect
                     cout << "\nSelect a target:\n1. Self\n";
@@ -970,27 +1105,30 @@ public:
                     cout << "Player Action: ";
                     int targetIndex;
                     cin >> targetIndex;
-                    if (targetIndex > 1 && targetIndex <= (int)roomEnemies.size()) {
+                    if (targetIndex > 1 && targetIndex <= (int)roomEnemies.size()-1) {
                         roomEnemies[targetIndex - 2]->DisplayEnemyInfo();
                     }
                     else if (targetIndex == 1) {
                         player->DisplayStats();
                     }
                     else {
-                        cout << "Invalid choice.\n";
+                        cout << "\nInvalid choice.";
+                        cin.get();
                     }
                     break;
                 }
 
                 case 5: { // Rest
-                    cout << player->getName() << " takes a moment to rest.\n";
+                    cout << "\n" << player->getName() << " takes a moment to rest.";
+                    cin.get();
                     player->Rest();
                     playerActed = true;
                     break;
                 }
 
                 default:
-                    cout << "Invalid input.";
+                    cout << "\nInvalid input.";
+                    cin.get();
                     break;
                 }
             }
@@ -1002,14 +1140,16 @@ public:
 
                 // Skip dead enemies
                 if (enemy->getCurrentHealth() <= 0) {
-                    cout << "\n" << enemy->getEnemyName() << " is dead.\n";
+                    cout << "\n" << enemy->getEnemyName() << " is dead.";
+                    cin.get();
                     continue;
                 }
 
                 enemy->StatusDamage();
 
                 if (enemy->getCurrentHealth() <= 0) {
-                    cout << "\n" << enemy->getEnemyName() << " is dead.\n";
+                    cout << "\n" << enemy->getEnemyName() << " is dead.";
+                    cin.get();
                     continue;
                 }
 
@@ -1030,11 +1170,13 @@ public:
                 if (enemy->getCurrentStamina() > enemy->getEnemyWeapon().getWeaponStaminaCost()) {
                     if (critHappened) {
                         player->TakeDamage(enemyDamage);
-                        cout << "\n Player took " << enemyDamage << " points of critical damage!\n";
+                        cout << "\n Player took " << enemyDamage << " points of critical damage!";
+                        cin.get();
                     }
                     else {
                         player->TakeDamage(enemyDamage);
-                        cout << "\n Player took " << enemyDamage << " points of damage!\n";
+                        cout << "\n Player took " << enemyDamage << " points of damage!";
+                        cin.get();
                     }
                 }
                 else {
@@ -1043,15 +1185,24 @@ public:
             }
             playerActed = false;
         }
+        player->getInventory()->AddLoot(roomLoot);
     }
-
+    
 };
 
 void CreateRooms() {
-    shared_ptr<Player> player = make_shared<Player>("Traveler");
+    random_device rd;
+    mt19937 gen(rd());
+
+    shared_ptr<Loot> playerLoot = make_shared<Loot>(0, 2, 3);
+    shared_ptr<Player> player = make_shared<Player>("Traveler", playerLoot);
 
     // Entrance
-    string e1i = "Narrator:\nBleakfalls Barrows; one of many Nordic ruins scattered accross skyrim. Our traveler has been sent out on a Quest: Plunder its depths for the great Dragonstone, along with any other treasures found on their journey. However they should proceed with caution, Bandits are a common sight in ruins and the Draugr call it their home. As they climb its steps looking for the entrance, our traveler meets their first test: 3 hungry bandits.";
+    cout << "Narrator:\nBleakfalls Barrows; one of many Nordic ruins scattered accross skyrim. "
+        << "Our traveler has been sent out on a Quest: Plunder its depths for the great Dragonstone, along with any other treasures found on their journey. "
+        << "However they should proceed with caution, Bandits are a common sight in ruins and the Draugr call it their home. "
+        << "As they climb its steps looking for the entrance, our traveler meets their first test: 3 hungry bandits.";
+    cin.get();
 
     shared_ptr<Enemy> e1e1 = make_shared<Bandit>("Bandit 1");
     shared_ptr<Enemy> e1e2 = make_shared<Bandit>("Bandit 2");
@@ -1059,58 +1210,108 @@ void CreateRooms() {
 
     vector<shared_ptr<Enemy>> e1et = { e1e1, e1e2, e1e3 };
 
-    Loot emptyLoot;
+    shared_ptr<Loot> e1el = make_shared<Loot>(uniform_int_distribution<>(18, 36)(gen), uniform_int_distribution<>(0, 6)(gen), uniform_int_distribution<>(0, 6)(gen));
 
-    string e1c = "Narrator:\nTaken by surprise by their strength but not by their numbers, our traveler finally makes their way into the ruins unaware of the dangers inside";
+    shared_ptr<Room> entrance = make_shared<Room>(player, e1et, e1el);
 
-    shared_ptr<Room> entrance = make_shared<Room>(player, e1i, e1c, e1et, emptyLoot, false);
     entrance->Battle();
 
-    // Room 1
-    string r1d = "";
+    cout << "\nLoot Collected:\n"
+        << "- " << e1el->getGoldCount() << " Gold\n"
+        << "- " << e1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << e1el->getHealthPotionCount() + e1el->getMagickaPotionCount() + e1el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
-    unique_ptr<Enemy> r1e1 = make_unique<Bandit>("Bandit 1");
-    unique_ptr<Enemy> r1e2 = make_unique<Bandit>("Bandit 2");
+    cout << "\nNarrator:\nTaken by surprise by their strength but not by their numbers, our traveler finally makes their way into the ruins unaware of the dangers inside...";
+    cin.get();
+
+    // Room 1
+    shared_ptr<Loot> r1l = make_shared<Loot>(uniform_int_distribution<>(0, 12)(gen), uniform_int_distribution<>(0,2)(gen), uniform_int_distribution<>(0, 2)(gen));
+
+    cout << "\nEntering the barrows, our traveler is met with a nasty scent that reaked of a familiar smell: death. "
+        << "The entrance is a large hall with clear signs of ruin and lit by a dim light behind a large pillar in the center. "
+        << "There are 2 dead bandits by the entrace.";
+    cin.get();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r1l->getGoldCount() << " Gold\n"
+        << "- " << r1l->getLockPickCount() << " Lockpicks\n"
+        << "- " << r1l->getHealthPotionCount() + r1l->getMagickaPotionCount() + r1l->getStaminaPotionCount() << " Potions";
+    cin.get();
+
+    cout << "\nNarrator:\nAs our traveler approaches the end of the hall, they realize there are 2 bandits camped out. "
+        << "Knowing they must advance deep into the barrows they call out to the foes ahead.";
+    cin.get();
+
+    shared_ptr<Enemy> r1e1 = make_shared<Bandit>("Bandit 1");
+    shared_ptr<Enemy> r1e2 = make_shared<Bandit>("Bandit 2");
+
+    vector<shared_ptr<Enemy>> r1et = { r1e1, r1e2 };
+
+    shared_ptr<Loot> r1el = make_shared<Loot>(uniform_int_distribution<>(6, 24)(gen), uniform_int_distribution<>(0, 4)(gen), uniform_int_distribution<>(0, 4)(gen));
+
+    shared_ptr<Room> room1 = make_shared<Room>(player, r1et, r1el);
+
+    room1->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r1el->getGoldCount() << " Gold\n"
+        << "- " << r1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r1el->getHealthPotionCount() + r1el->getMagickaPotionCount() + r1el->getStaminaPotionCount() << " Potions";
+    cin.get();
+
+    cout << "\nNarrator:\nAfter handling the two bandits our Traveler makes their way further into the ruins.";
+    cin.get();
 
     // Room 2.1
-    string r2_1d = "";
+    shared_ptr<Enemy> r21e1 = make_shared<Bandit>("Bandit 1");
 
-    unique_ptr<Enemy> r2_1e1 = make_unique<Bandit>("Bandit 1");
+    shared_ptr<Loot> r21el = make_shared<Loot>(uniform_int_distribution<>(6, 12)(gen), uniform_int_distribution<>(0, 2)(gen), uniform_int_distribution<>(0, 2)(gen));
 
+    vector<shared_ptr<Enemy>> r21et = { r21e1 };
+
+    shared_ptr<Room> room21 = make_shared<Room>(player, r21et, r21el);
+
+    room21->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r21el->getGoldCount() << " Gold\n"
+        << "- " << r21el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r21el->getHealthPotionCount() + r21el->getMagickaPotionCount() + r21el->getStaminaPotionCount() << " Potions";
+    cin.get();
 
     // Room 2.2
-    string r2_2d = "";
+    shared_ptr<Enemy> r22e1 = make_shared<Skeever>("Skeever 1");
+    shared_ptr<Enemy> r22e2 = make_shared<Skeever>("Skeever 2");
+    shared_ptr<Enemy> r22e3 = make_shared<Skeever>("Skeever 3");
 
-    unique_ptr<Enemy> r2_2e1 = make_unique<Skeever>("Skeever 1");
-    unique_ptr<Enemy> r2_2e2 = make_unique<Skeever>("Skeever 2");
-    unique_ptr<Enemy> r2_2e3 = make_unique<Skeever>("Skeever 3");
-
+    vector<shared_ptr<Enemy>> r22et = { r22e1, r22e2, r22e3 };
 
     // Room 3
-    string r3d = "";
+    shared_ptr<Enemy> r3e1 = make_shared<WoundedFrostbiteSpider>("Wounded Frostbite Spider");
 
-    unique_ptr<Enemy> r3e1 = make_unique<Bandit>("Wounded Frostbite Spider");
+    vector<shared_ptr<Enemy>> r3et = { r3e1 };
     
     // Room 4
-    string r4d = "";
+
 
     // Room 5
-    string r5d = "";
+
 
     // Room 6
-    string r6d = "";
+
 
     // Room 7
-    string r7d = "";
+
 
     // Room 8
-    string r8d = "";
+
 
     // Room 9
-    string r9d = "";
+
 
     // Room 10
-    string r10d = "";
+
 
 }
 
