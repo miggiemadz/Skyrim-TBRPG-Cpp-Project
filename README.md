@@ -54,19 +54,19 @@ Loot contains:
 
 ### 🔐 Lockpicking Minigame
 
-A 3-turn Left/Right puzzle with randomized sequences.\
+A 3-turn Left/Right puzzle with randomized sequences.
 Failing consumes a lockpick and restarts the sequence.
 
 ------------------------------------------------------------------------
 
 ## 🐺 Enemy Types
 
--   Bandit\
--   Bandit Outlaw\
--   Skeever\
--   Wounded Frostbite Spider\
--   Draugr\
--   Restless Draugr\
+-   Bandit
+-   Bandit Outlaw
+-   Skeever
+-   Wounded Frostbite Spider
+-   Draugr
+-   Restless Draugr
 -   **Draugr Scourge Lord** -- Final boss (880 HP, 595 stamina)
 
 ------------------------------------------------------------------------
