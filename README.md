@@ -23,10 +23,10 @@ management - Lockpicking puzzle - 10-room dungeon progression
 ### ⚔️ Turn-Based Combat
 
 Player actions include: 
-- Attack\
-- Cast Spell\
-- Use Bag\
-- Inspect\
+- Attack
+- Cast Spell
+- Use Bag
+- Inspect
 - Rest
 
 Enemies act in stamina-sorted order each round.
@@ -35,17 +35,19 @@ Enemies act in stamina-sorted order each round.
 
 ### 🪄 Magic System
 
-Spells: - Firebolt -- HP damage + Ignite\
-- Ice Spike -- HP + Stamina damage + Frostbite\
-- Lightning Bolt -- HP + Magicka damage + Shock\
+Spells: 
+- Firebolt -- HP damage + Ignite
+- Ice Spike -- HP + Stamina damage + Frostbite
+- Lightning Bolt -- HP + Magicka damage + Shock
 - Healing -- Restore 50 HP
 
 ------------------------------------------------------------------------
 
 ### 🧪 Loot & Inventory
 
-Loot contains: - Gold\
-- Lockpicks\
+Loot contains: 
+- Gold
+- Lockpicks
 - Health / Magicka / Stamina potions
 
 ------------------------------------------------------------------------
@@ -53,7 +55,7 @@ Loot contains: - Gold\
 ### 🔐 Lockpicking Minigame
 
 A 3-turn Left/Right puzzle with randomized sequences.\
-Failing consumes a lockpick.
+Failing consumes a lockpick and restarts the sequence.
 
 ------------------------------------------------------------------------
 
