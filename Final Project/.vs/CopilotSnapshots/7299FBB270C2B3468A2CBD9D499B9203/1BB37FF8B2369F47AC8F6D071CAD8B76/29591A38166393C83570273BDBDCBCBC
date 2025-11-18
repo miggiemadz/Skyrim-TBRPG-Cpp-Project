@@ -1,0 +1,1882 @@
+﻿#include <iostream>
+#include <memory>
+#include <vector>
+#include <string>
+#include <random>
+#include <limits>
+
+using namespace std;
+class Player;
+
+void ClearInput() {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+}
+
+// Generic pause for narration / non-combat transitions
+void WaitForEnter() {
+    cout << "\nPress Enter to continue...";
+    cout.flush();
+    cin.get();
+}
+
+// Specific pause for battle round transitions
+void WaitForNextRound() {
+    ClearInput();
+    cout << "\nThe fight continues..."
+        << "\nPress Enter to advance to the next round...";
+    cout.flush();
+    cin.get();
+}
+
+// Safe integer input with range [minValue, maxValue]
+int ReadIntInRange(const string& prompt, int minValue, int maxValue) {
+    int value;
+    while (true) {
+        cout << prompt;
+        if (!(cin >> value)) {
+            cin.clear();
+            ClearInput();
+            cout << "\nInvalid input. Please enter a number.\n";
+            continue;
+        }
+        if (value < minValue || value > maxValue) {
+            cout << "\nInvalid choice. Please enter a number between "
+                << minValue << " and " << maxValue << ".\n";
+            continue;
+        }
+        return value;
+    }
+}
+
+class Weapon {
+private:
+    enum weaponType {
+        ANBA,
+        ANGS,
+        ANWH,
+        ANWA,
+        ANS,
+        ANM,
+        IBA,
+        IGS,
+        IWH,
+        IWA,
+        IS,
+        IM,
+        SBA,
+        SGS,
+        SWH,
+        SWA,
+        SS,
+        SM,
+        ID,
+        Other
+    };
+
+    string weaponName;
+
+    int weaponDamage;
+    int weaponCriticalBoost;
+
+    int weaponStaminaCost;
+
+    weaponType wt;
+
+public:
+    // Setters
+    void setWeaponName(string name) { this->weaponName = name; }
+
+    void setWeaponDamage(int value) { this->weaponDamage = value; }
+    void setWeaponCriticalDamage(int value) { this->weaponCriticalBoost = value; }
+
+    void setWeaponStaminaCost(int value) { this->weaponStaminaCost = value; }
+
+    void setWeaponType(weaponType value) { this->wt = value; }
+
+    // Getters
+    string getWeaponName() const { return this->weaponName; }
+
+    int getWeaponDamage() const { return this->weaponDamage; }
+    int getWeaponCriticalDamage() const { return this->weaponCriticalBoost; }
+
+    int getWeaponStaminaCost() const { return this->weaponStaminaCost; }
+
+    weaponType getWeaponType() const { return this->wt; }
+
+    // Constructors
+    Weapon() {};
+
+    Weapon(int type)
+        : wt(static_cast<weaponType>(type))
+    {
+        switch (wt) {
+        case 0:
+            this->weaponName = "Ancient Nord Battle Axe";
+            this->weaponDamage = 18;
+            this->weaponCriticalBoost = 1;
+            this->weaponStaminaCost = 22;
+            break;
+        case 1:
+            this->weaponName = "Ancient Nord Great Sword";
+            this->weaponDamage = 17;
+            this->weaponCriticalBoost = 1;
+            this->weaponStaminaCost = 20;
+            break;
+        case 2:
+            this->weaponName = "Ancient Nord War Hammer";
+            this->weaponDamage = 20;
+            this->weaponCriticalBoost = 1;
+            this->weaponStaminaCost = 26;
+            break;
+        case 3:
+            this->weaponName = "Ancient Nord War Axe";
+            this->weaponDamage = 9;
+            this->weaponCriticalBoost = 1;
+            this->weaponStaminaCost = 12;
+            break;
+        case 4:
+            this->weaponName = "Ancient Nord Sword";
+            this->weaponDamage = 8;
+            this->weaponCriticalBoost = 1;
+            this->weaponStaminaCost = 9;
+            break;
+        case 5:
+            this->weaponName = "Ancient Nord Mace";
+            this->weaponDamage = 10;
+            this->weaponCriticalBoost = 14;
+            this->weaponStaminaCost = 14; // small stamina cost fix for consistency
+            break;
+        case 6:
+            this->weaponName = "Iron Battle Axe";
+            this->weaponDamage = 16;
+            this->weaponCriticalBoost = 7;
+            this->weaponStaminaCost = 20;
+            break;
+        case 7:
+            this->weaponName = "Iron Great Sword";
+            this->weaponDamage = 15;
+            this->weaponCriticalBoost = 7;
+            this->weaponStaminaCost = 18;
+            break;
+        case 8:
+            this->weaponName = "Iron War Hammer";
+            this->weaponDamage = 18;
+            this->weaponCriticalBoost = 9;
+            this->weaponStaminaCost = 24;
+            break;
+        case 9:
+            this->weaponName = "Iron War Axe";
+            this->weaponDamage = 8;
+            this->weaponCriticalBoost = 4;
+            this->weaponStaminaCost = 11;
+            break;
+        case 10:
+            this->weaponName = "Iron Sword";
+            this->weaponDamage = 7;
+            this->weaponCriticalBoost = 3;
+            this->weaponStaminaCost = 8;
+            break;
+        case 11:
+            this->weaponName = "Iron Mace";
+            this->weaponDamage = 9;
+            this->weaponCriticalBoost = 4;
+            this->weaponStaminaCost = 13;
+            break;
+        case 12:
+            this->weaponName = "Steel Battle Axe";
+            this->weaponDamage = 18;
+            this->weaponCriticalBoost = 8;
+            this->weaponStaminaCost = 21;
+            break;
+        case 13:
+            this->weaponName = "Steel Great Sword";
+            this->weaponDamage = 17;
+            this->weaponCriticalBoost = 8;
+            this->weaponStaminaCost = 19;
+            break;
+        case 14:
+            this->weaponName = "Steel War Hammer";
+            this->weaponDamage = 20;
+            this->weaponCriticalBoost = 10;
+            this->weaponStaminaCost = 25;
+            break;
+        case 15:
+            this->weaponName = "Steel War Axe";
+            this->weaponDamage = 9;
+            this->weaponCriticalBoost = 4;
+            this->weaponStaminaCost = 12;
+            break;
+        case 16:
+            this->weaponName = "Steel Sword";
+            this->weaponDamage = 8;
+            this->weaponCriticalBoost = 4;
+            this->weaponStaminaCost = 9;
+            break;
+        case 17:
+            this->weaponName = "Steel Mace";
+            this->weaponDamage = 10;
+            this->weaponCriticalBoost = 5;
+            this->weaponStaminaCost = 14;
+            break;
+        case 18:
+            this->weaponName = "Iron Dagger";
+            this->weaponDamage = 4;
+            this->weaponCriticalBoost = 2;
+            this->weaponStaminaCost = 5;
+            break;
+        default:
+            this->weaponName = "Fists";
+            this->weaponDamage = 1;
+            this->weaponCriticalBoost = 0;
+            this->weaponStaminaCost = 0;
+            break;
+        }
+    }
+
+public:
+    void DisplayWeaponInfo() {
+        cout << "\nWeapon Name: " << this->weaponName
+            << "\nWeapon Damage: " << this->weaponDamage
+            << "\nWeapon Critical Damage Bonus: " << this->weaponCriticalBoost << "\n";
+    }
+};
+
+class Magic {
+private:
+    enum spell {
+        Firebolt,
+        IceSpike,
+        LightningBolt,
+        Healing
+    };
+
+    enum status {
+        Ignited,
+        Frostbitten,
+        Shocked
+    };
+
+    string spellName;
+
+    int spellHealthDamage = 0;
+    int spellMagickaDamage = 0;
+    int spellStaminaDamage = 0;
+    int spellHealing = 0;
+
+    int spellMagickaCost = 0;
+
+    spell sp;
+    status st;
+
+public:
+    string getSpellName() const { return this->spellName; }
+
+    int getSpellHealthDamage() const { return this->spellHealthDamage; }
+    int getSpellMagickaDamage() const { return this->spellMagickaDamage; }
+    int getSpellStaminaDamage() const { return this->spellStaminaDamage; }
+    int getSpellHealing() const { return this->spellHealing; }
+
+    int getSpellMagickaCost() const { return this->spellMagickaCost; }
+
+    spell getSpell() const { return this->sp; }
+    status getStatus() const { return this->st; }
+
+    Magic() {}
+
+    Magic(int type)
+        : sp(static_cast<spell>(type))
+    {
+        switch (sp) {
+        case 0:
+            this->spellName = "Firebolt";
+            this->spellHealthDamage = 25;
+            this->spellMagickaCost = 43;
+            this->st = Ignited;
+            break;
+        case 1:
+            this->spellName = "Ice Spike";
+            this->spellHealthDamage = 25;
+            this->spellStaminaDamage = 25;
+            this->spellMagickaCost = 48;
+            this->st = Frostbitten;
+            break;
+        case 2:
+            this->spellName = "Lightning Bolt";
+            this->spellHealthDamage = 25;
+            this->spellMagickaDamage = 13;
+            this->spellMagickaCost = 51;
+            this->st = Shocked;
+            break;
+        case 3:
+            this->spellName = "Healing";
+            this->spellHealing = 50;
+            this->spellMagickaCost = 73;
+            break;
+        }
+    }
+
+    string DisplayStatus() const {
+        switch (st) {
+        case Ignited:     return "Ignited";
+        case Frostbitten: return "Frostbitten";
+        case Shocked:     return "Shocked";
+        default:          return "";
+        }
+    }
+};
+
+class Armor {
+public:
+    Armor() {}
+};
+
+class Loot {
+private:
+    int goldCount = 0;
+    int lockPickCount = 0;
+    int healthPotionCount = 0;
+    int magickaPotionCount = 0;
+    int staminaPotionCount = 0;
+
+public:
+    int getGoldCount() { return this->goldCount; }
+    int getLockPickCount() { return this->lockPickCount; }
+    int getHealthPotionCount() { return this->healthPotionCount; }
+    int getMagickaPotionCount() { return this->magickaPotionCount; }
+    int getStaminaPotionCount() { return this->staminaPotionCount; }
+
+    void setGoldCount(int value) { this->goldCount = value; }
+    void setLockPickCount(int value) { this->lockPickCount = value; }
+    void setHealthPotionCount(int value) { this->healthPotionCount = value; }
+    void setMagickaPotionCount(int value) { this->magickaPotionCount = value; }
+    void setStaminaPotionCount(int value) { this->staminaPotionCount = value; }
+
+    Loot() {}
+
+    Loot(int gold, int lockpicks, int potions)
+        : goldCount(gold), lockPickCount(lockpicks)
+    {
+        if (potions > 0) {
+            random_device rd;
+            mt19937 gen(rd());
+
+            for (int i = 0; i < potions; i++) {
+                int potionType = uniform_int_distribution<>(0, 2)(gen);
+                switch (potionType) {
+                case 0:
+                    setHealthPotionCount(getHealthPotionCount() + 1);
+                    break;
+                case 1:
+                    setMagickaPotionCount(getMagickaPotionCount() + 1);
+                    break;
+                case 2:
+                    setStaminaPotionCount(getStaminaPotionCount() + 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    void AddLoot(shared_ptr<Loot> loot) {
+        this->setGoldCount(this->getGoldCount() + loot->getGoldCount());
+        this->setLockPickCount(this->getLockPickCount() + loot->getLockPickCount());
+        this->setHealthPotionCount(this->getHealthPotionCount() + loot->getHealthPotionCount());
+        this->setMagickaPotionCount(this->getMagickaPotionCount() + loot->getMagickaPotionCount());
+        this->setStaminaPotionCount(this->getStaminaPotionCount() + loot->getStaminaPotionCount());
+    }
+
+    void DisplayLoot() {
+        cout << "\nLoot:"
+            << "\n - Gold: " << getGoldCount()
+            << "\n - Lockpicks: " << getLockPickCount()
+            << "\n - Health Potions: " << getHealthPotionCount()
+            << "\n - Magicka Potions: " << getMagickaPotionCount()
+            << "\n - Stamina Potions: " << getStaminaPotionCount() << "\n";
+    }
+
+};
+
+class Enemy {
+protected:
+    enum statusCondition {
+        Ignited,
+        Frostbitten,
+        Shocked
+    };
+
+    string enemyName;
+    int totalHealth = 0;
+    int totalMagicka = 0;
+    int totalStamina = 0;
+    int currentHealth = 0;
+    int currentMagicka = 0;
+    int currentStamina = 0;
+
+    Weapon enemyWeapon;
+    Armor enemyArmor;
+    Loot enemyLoot;
+	vector<Magic> enemySpells;
+
+    statusCondition sc;
+
+public:
+    string getEnemyName() const { return this->enemyName; }
+    int getTotalHealth() const { return this->totalHealth; }
+    int getTotalMagicka() const { return this->totalMagicka; }
+    int getTotalStamina() const { return this->totalStamina; }
+    int getCurrentHealth() const { return this->currentHealth; }
+    int getCurrentMagicka() const { return this->currentMagicka; }
+    int getCurrentStamina() const { return this->currentStamina; }
+
+    statusCondition getStatusCondition() const { return this->sc; }
+    Weapon getEnemyWeapon() const { return this->enemyWeapon; }
+    Armor getEnemyArmor() const { return this->enemyArmor; }
+    Loot getEnemyLoot() const { return this->enemyLoot; }
+	vector<Magic> getEnemySpells() const { return this->enemySpells; }
+
+    void setStatusCondition(int scValue) { this->sc = static_cast<statusCondition>(scValue); }
+
+    Enemy() {}
+
+    Enemy(const string name)
+        : enemyName(name)
+    {
+    }
+
+    void TakeDamage(int amount) {
+        currentHealth -= amount;
+        if (currentHealth < 0) currentHealth = 0;
+    }
+
+    void CastSpell(const shared_ptr<Player>& target);
+
+    void StatusDamage() {
+        switch (sc) {
+        case Ignited:
+            currentHealth -= 25;
+            cout << "\n" << enemyName << " took 25 points of burn damage.";
+            break;
+        case Frostbitten:
+            currentStamina -= 25;
+            cout << "\n" << enemyName << " took 25 stamina points of frost damage.";
+            break;
+        case Shocked:
+            currentMagicka -= 25;
+            cout << "\n" << enemyName << " took 25 magicka points of shock damage.";
+            break;
+        }
+    }
+    
+    void Rest() {
+        currentStamina += 75;
+        currentMagicka += 35;
+        if (currentStamina > totalStamina)
+            currentStamina = totalStamina;
+        if (currentMagicka > totalMagicka) {
+            currentMagicka = totalMagicka;
+        }
+        cout << "\n" << enemyName << " was too tired to move.\n";
+    }
+
+    void DisplayEnemyInfo() {
+        if (currentHealth < 0) currentHealth = 0;
+        if (currentMagicka < 0) currentMagicka = 0;
+        if (currentStamina < 0) currentStamina = 0;
+        cout << "------- \n Enemy Name: " << this->enemyName
+            << "\n \n Enemy Stats \n Enemy Health: " << this->currentHealth << " / " << this->totalHealth
+            << "\n Enemy Magicka: " << this->currentMagicka << " / " << this->totalMagicka
+            << "\n Enemy Stamina: " << this->currentStamina << " / " << this->totalStamina << "\n";
+
+        this->enemyWeapon.DisplayWeaponInfo();
+
+        cout << "------- \n";
+    }
+};
+
+class Bandit : public Enemy {
+private:
+    enum banditType
+    {
+        OHLA,
+        OHHA,
+        THLA,
+        THHA,
+        M
+    };
+
+    banditType bt;
+
+public:
+    Bandit(const string name)
+        : Enemy(name)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+        bt = static_cast<banditType>(uniform_int_distribution<>(0, 4)(gen));
+
+        switch (bt) {
+        case 0:
+        case 1: {
+            this->totalHealth = 35;
+            this->totalMagicka = 25;
+            this->totalStamina = 70;
+
+            uniform_int_distribution<> dist(9, 11);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        case 2:
+        case 3: {
+            this->totalHealth = 35;
+            this->totalMagicka = 25;
+            this->totalStamina = 70;
+
+            uniform_int_distribution<> dist(6, 8);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        case 4: {
+            this->totalHealth = 35;
+            this->totalMagicka = 100;
+            this->totalStamina = 50;
+
+            this->enemyWeapon = Weapon(18);
+
+            uniform_int_distribution<> dist(0, 2);
+
+            this->enemySpells.push_back(Magic(dist(gen)));
+            this->enemySpells.push_back(Magic(3));
+            break;
+        }
+        }
+
+        this->currentHealth = this->totalHealth;
+        this->currentMagicka = this->totalMagicka;
+        this->currentStamina = this->totalStamina;
+    }
+};
+
+class BanditOutlaw : public Enemy {
+private:
+    enum banditOutlawType
+    {
+        OHLA,
+        OHHA,
+        THLA,
+        THHA,
+        M
+    };
+
+    banditOutlawType bot;
+
+public:
+    BanditOutlaw(const string name)
+        : Enemy(name)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+        bot = static_cast<banditOutlawType>(uniform_int_distribution<>(0, 4)(gen));
+
+        switch (bot) {
+        case 0:
+        case 1: {
+            this->totalHealth = 109;
+            this->totalMagicka = 25;
+            this->totalStamina = 86;
+
+            uniform_int_distribution<> dist(15, 17);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        case 2:
+        case 3: {
+            this->totalHealth = 109;
+            this->totalMagicka = 25;
+            this->totalStamina = 86;
+
+            uniform_int_distribution<> dist(12, 14);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        case 4: {
+            this->totalHealth = 101;
+            this->totalMagicka = 124;
+            this->totalStamina = 70;
+
+            this->enemyWeapon = Weapon(18);
+
+            uniform_int_distribution<> dist(0, 2);
+
+            this->enemySpells.push_back(Magic(dist(gen)));
+            this->enemySpells.push_back(Magic(3));
+            break;
+        }
+        }
+
+        this->currentHealth = this->totalHealth;
+        this->currentMagicka = this->totalMagicka;
+        this->currentStamina = this->totalStamina;
+    }
+};
+
+class Draugr : public Enemy {
+public:
+    Draugr(const string name)
+        : Enemy(name)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+        uniform_int_distribution<> dist(0, 5);
+
+        this->enemyWeapon = Weapon(dist(gen));
+
+        this->totalHealth = 50;
+        this->totalMagicka = 0;
+        this->totalStamina = 80;
+
+        this->currentHealth = this->totalHealth;
+        this->currentMagicka = this->totalMagicka;
+        this->currentStamina = this->totalStamina;
+    }
+};
+
+class RestlessDraugr : public Enemy {
+private:
+    enum restlessDraugrType
+    {
+        hS,
+        hMs,
+        HS
+    };
+
+    restlessDraugrType rdt;
+
+public:
+    RestlessDraugr(const string name)
+        : Enemy(name)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+        rdt = static_cast<restlessDraugrType>(uniform_int_distribution<>(0, 2)(gen));
+
+        switch (rdt) {
+        case 0: {
+            this->totalHealth = 150;
+            this->totalStamina = 205;
+
+            uniform_int_distribution<> dist(0, 5);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        case 1: {
+            this->totalHealth = 150;
+            this->totalMagicka = 50;
+            this->totalStamina = 180;
+
+            uniform_int_distribution<> dist(3, 5);
+            this->enemyWeapon = Weapon(dist(gen));
+
+            this->enemySpells.push_back(Magic(1));
+            break;
+        }
+        case 2: {
+            this->totalHealth = 175;
+            this->totalMagicka = 0;
+            this->totalStamina = 205;
+
+            uniform_int_distribution<> dist(0, 5);
+            this->enemyWeapon = Weapon(dist(gen));
+            break;
+        }
+        }
+
+        this->currentHealth = totalHealth;
+        this->currentMagicka = totalMagicka;
+        this->currentStamina = totalStamina;
+    }
+};
+
+class WoundedFrostbiteSpider : public Enemy {
+public:
+    WoundedFrostbiteSpider() {}
+    WoundedFrostbiteSpider(const string name)
+        : Enemy(name)
+    {
+        this->totalHealth = 160;
+        this->totalMagicka = 4;
+        this->totalStamina = 50;
+
+        this->currentHealth = totalHealth;
+        this->currentMagicka = totalMagicka;
+        this->currentStamina = totalStamina;
+    }
+};
+
+class Skeever : public Enemy {
+public:
+    Skeever() {}
+    Skeever(const string name)
+        : Enemy(name)
+    {
+        this->totalHealth = 15;
+        this->totalMagicka = 0;
+        this->totalStamina = 15;
+
+        this->currentHealth = totalHealth;
+        this->currentMagicka = totalMagicka;
+        this->currentStamina = totalStamina;
+    }
+};
+
+class DraugrScourgeLord : public Enemy {
+public:
+    DraugrScourgeLord() {}
+    DraugrScourgeLord(const string name)
+        : Enemy(name)
+    {
+        this->totalHealth = 880;
+        this->totalMagicka = 0;
+        this->totalStamina = 595;
+
+        random_device rd;
+        mt19937 gen(rd());
+
+        this->enemyWeapon = Weapon(uniform_int_distribution<>(0, 5)(gen));
+
+        this->currentHealth = totalHealth;
+        this->currentMagicka = totalMagicka;
+        this->currentStamina = totalStamina;
+    }
+};
+
+class Player {
+private:
+    enum statusCondition {
+        Ignited,
+        Frostbitten,
+        Shocked
+    };
+
+    string name;
+    int totalHealth;
+    int totalMagicka;
+    int totalStamina;
+
+    int currentHealth;
+    int currentMagicka;
+    int currentStamina;
+
+	statusCondition sc;
+
+    Weapon equippedWeapon = Weapon(6);
+    Armor equippedArmor;
+	
+    vector<Magic> knownSpells = { Magic(0), Magic(1), Magic(2), Magic(3) };
+    shared_ptr<Loot> inventory;
+
+public:
+    Player(string name, shared_ptr<Loot> loot)
+        : name(name), inventory(loot), totalHealth(200), totalMagicka(150), totalStamina(200)
+    {
+        currentHealth = totalHealth;
+        currentMagicka = totalMagicka;
+        currentStamina = totalStamina;
+    }
+
+    // Getters
+    string getName() const { return name; }
+    int getHealth() const { return currentHealth; }
+    vector<Magic> getKnownSpells() const { return knownSpells; }
+    shared_ptr<Loot> getInventory() const { return inventory; }
+
+	void setStatusCondition(int scValue) { this->sc = static_cast<statusCondition>(scValue); }
+	statusCondition getStatusCondition() const { return this->sc; }
+
+    int statusTurns = 0;
+
+    void StatusDamage() {
+        switch (sc) {
+        case Ignited:
+            currentHealth -= 25;
+            cout << "\n" << name << " took 25 points of burn damage.\n";
+			statusTurns++;
+            if (statusTurns == 3) {
+				cout << "\n" << name << " is no longer Ignited.\n";
+				statusTurns = 0;
+				sc = static_cast<statusCondition>(-1);
+            }
+            break;
+        case Frostbitten:
+            currentStamina -= 25;
+            cout << "\n" << name << " took 25 stamina points of frost damage.\n";
+            statusTurns++;
+            if (statusTurns == 3) {
+                cout << "\n" << name << " is no longer Frostbitten.\n";
+                statusTurns = 0;
+                sc = static_cast<statusCondition>(-1);
+            }
+            break;
+        case Shocked:
+            currentMagicka -= 25;
+            cout << "\n" << name << " took 25 magicka points of shock damage.\n";
+            statusTurns++;
+            if (statusTurns == 3) {
+                cout << "\n" << name << " is no longer Shocked.\n";
+                statusTurns = 0;
+                sc = static_cast<statusCondition>(-1);
+            }
+            break;
+        }
+    }
+
+    void Rest() {
+        currentStamina += 50;
+        currentMagicka += 35;
+        if (currentStamina > totalStamina)
+            currentStamina = totalStamina;
+        if (currentMagicka > totalMagicka)
+            currentMagicka = totalMagicka;
+        cout << " Recovered some stamina and magicka!\n";
+    }
+
+    // Core actions
+    void Attack(shared_ptr<Enemy> target) {
+        if (equippedWeapon.getWeaponStaminaCost() <= currentStamina) {
+            int damage = equippedWeapon.getWeaponDamage();
+
+            random_device rd;
+            mt19937 gen(rd());
+
+            int critCheck = uniform_int_distribution<>(1, 10)(gen);
+
+            if (critCheck == 10) {
+                damage += equippedWeapon.getWeaponCriticalDamage();
+                cout << "\n" << name << " attacks " << target->getEnemyName()
+                    << " for " << damage << " critical damage!\n";
+            }
+            else {
+                cout << "\n" << name << " attacks " << target->getEnemyName()
+                    << " for " << damage << " damage!\n";
+            }
+
+            currentStamina -= equippedWeapon.getWeaponStaminaCost();
+            target->TakeDamage(damage);
+        }
+        else {
+            cout << "\nNot enough stamina to attack!\n";
+        }
+    }
+
+    void CastSpell(int spellType, shared_ptr<Enemy> target) {
+        Magic spell = Magic(spellType - 1);
+
+        if (currentMagicka >= spell.getSpellMagickaCost()) {
+            if (!target) {
+                currentHealth += spell.getSpellHealing();
+                if (currentHealth > totalHealth) {
+                    currentHealth = totalHealth;
+                }
+
+                cout << "\n" << name << " healed " << spell.getSpellHealing() << " health points.\n";
+                currentMagicka -= spell.getSpellMagickaCost();
+            }
+            else {
+                currentMagicka -= spell.getSpellMagickaCost();
+                cout << "\n" << name << " casts " << spell.getSpellName()
+                    << " on " << target->getEnemyName() << "!\n";
+                target->TakeDamage(spell.getSpellHealthDamage());
+                int statusValue = spell.getStatus();
+                target->setStatusCondition(statusValue);
+
+                cout << target->getEnemyName() << " took " << spell.getSpellHealthDamage()
+                    << " damage and is now " << spell.DisplayStatus() << ".\n";
+            }
+        }
+        else {
+            cout << "\n" << name << " doesn't have enough magicka!\n";
+        }
+    }
+
+    void UsePotion(int type) {
+        switch (type) {
+        case 0:
+            if (inventory->getHealthPotionCount() == 0) {
+                cout << "\nYou have no Health Potions.\n";
+            }
+            else if (currentHealth == totalHealth) {
+                cout << "\nYour health is already full.\n";
+            }
+            else {
+                inventory->setHealthPotionCount(inventory->getHealthPotionCount() - 1);
+                currentHealth += 100;
+                if (currentHealth > totalHealth) currentHealth = totalHealth;
+
+                cout << "\nTraveler used a Health Potion.\n";
+            }
+            break;
+        case 1:
+            if (inventory->getMagickaPotionCount() == 0) {
+                cout << "\nYou have no Magicka Potions.\n";
+            }
+            else if (currentMagicka == totalMagicka) {
+                cout << "\nYour magicka is already full.\n";
+            }
+            else {
+                inventory->setMagickaPotionCount(inventory->getMagickaPotionCount() - 1);
+                currentMagicka += 75;
+                if (currentMagicka > totalMagicka) currentMagicka = totalMagicka;
+
+                cout << "\nTraveler used a Magicka Potion.\n";
+            }
+            break;
+        case 2:
+            if (inventory->getStaminaPotionCount() == 0) {
+                cout << "\nYou have no Stamina Potions.\n";
+            }
+            else if (currentStamina == totalStamina) {
+                cout << "\nYour stamina is already full.\n";
+            }
+            else {
+                inventory->setStaminaPotionCount(inventory->getStaminaPotionCount() - 1);
+                currentStamina += 100;
+                if (currentStamina > totalStamina) currentStamina = totalStamina;
+
+                cout << "\nTraveler used a Stamina Potion.\n";
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    void TakeDamage(int amount) {
+        currentHealth -= amount;
+        if (currentHealth < 0) currentHealth = 0;
+    }
+
+    bool IsAlive() const {
+        if (currentHealth > 0) {
+            return true;
+        }
+        else {
+            cout << "\nPlayer has died...";
+            // Death is a special moment; pause is okay here
+            WaitForEnter();
+            return false;
+        }
+    }
+
+    void DisplayStats() {
+        if (currentMagicka < 0) currentMagicka = 0;
+        if (currentStamina < 0) currentStamina = 0;
+
+        cout << "\nPlayer Stats: " << name
+            << "\nHealth: " << currentHealth << "/" << totalHealth
+            << "\nMagicka: " << currentMagicka << "/" << totalMagicka
+            << "\nStamina: " << currentStamina << "/" << totalStamina << "\n"
+            << "\nWeapon Stats:";
+        equippedWeapon.DisplayWeaponInfo();
+    }
+};
+
+void Enemy::CastSpell(const shared_ptr<Player>& target) {
+    random_device rd;
+    mt19937 gen(rd());
+    int spellIndex = uniform_int_distribution<>(0, static_cast<int>(enemySpells.size()) - 1)(gen);
+    Magic spell = enemySpells[spellIndex];
+    if (spell.getSpellName() == "Healing") {
+        if (currentHealth < totalHealth) {
+            currentHealth += spell.getSpellHealing();
+            if (currentHealth > totalHealth) {
+                currentHealth = totalHealth;
+            }
+            currentMagicka -= spell.getSpellMagickaCost();
+            cout << "\n" << enemyName << " casts " << spell.getSpellName() << "!\n";
+            return;
+        }
+        else {
+            // If health is full, try to cast another spell
+            CastSpell(target);
+            return;
+        }
+    }
+
+    else if (currentMagicka >= spell.getSpellMagickaCost()) {
+        currentMagicka -= spell.getSpellMagickaCost();
+        target->TakeDamage(spell.getSpellHealthDamage());
+        int spellStatus = spell.getStatus();
+        target->setStatusCondition(spellStatus);
+        cout << "\n" << enemyName << " casts " << spell.getSpellName() << "!\n";
+    }
+    else {
+        cout << "\n" << enemyName << " tried to cast " << spell.getSpellName() << " but didn't have enough magicka!\n";
+        this->Rest();
+    }
+}
+
+class Chest {
+private:
+    int lockPickTurns;
+    int successfullTurns;
+    shared_ptr<Loot> chestLoot;
+    shared_ptr<Loot> playerLoot;
+
+    int firstTurn;
+    int secondTurn;
+    int thirdTurn;
+
+    bool chestComplete = false;
+
+public:
+    Chest(shared_ptr<Loot> chestLoot, shared_ptr<Loot> playerLoot)
+        : lockPickTurns(3), successfullTurns(0), chestLoot(chestLoot), playerLoot(playerLoot)
+    {
+        random_device rd;
+        mt19937 gen(rd());
+
+        firstTurn = uniform_int_distribution<>(0, 1)(gen);
+        secondTurn = uniform_int_distribution<>(0, 1)(gen);
+        thirdTurn = uniform_int_distribution<>(0, 1)(gen);
+    }
+
+    void AttemptUnlock() {
+        int playerAttempt;
+
+        while (successfullTurns < lockPickTurns && !chestComplete && playerLoot->getLockPickCount() > 0) {
+            cout << "\n--- Turn " << successfullTurns + 1 << " ---\n";
+            playerAttempt = ReadIntInRange("Choose your lockpick turn (0 = Left, 1 = Right): ", 0, 1);
+
+            int correctTurn = 0;
+            if (successfullTurns == 0)      correctTurn = firstTurn;
+            else if (successfullTurns == 1) correctTurn = secondTurn;
+            else                             correctTurn = thirdTurn;
+
+            if (playerAttempt == correctTurn) {
+                cout << "\nSuccessful turn! (" << successfullTurns + 1 << " of 3)";
+                successfullTurns++;
+            }
+            else {
+                string retryChoice;
+                playerLoot->setLockPickCount(playerLoot->getLockPickCount() - 1);
+                if (playerLoot->getLockPickCount() == 0) {
+                    break;
+                }
+                else {
+                    cout << "\nFailed turn, " << playerLoot->getLockPickCount()
+                        << " lockpicks remaining. Try again? [y or n]: ";
+                    cin >> retryChoice;
+                    while (retryChoice != "n" && retryChoice != "N" &&
+                        retryChoice != "Y" && retryChoice != "y") {
+                        cout << "\nInvalid choice. Try again: [y or n]: ";
+                        cin >> retryChoice;
+                        cout << "\n";
+                    }
+                    if (retryChoice == "N" || retryChoice == "n") {
+                        chestComplete = true;
+                    }
+                    else {
+                        successfullTurns = 0;
+                    }
+                }
+            }
+        }
+
+        if (successfullTurns == lockPickTurns) {
+            cout << "\nChest Unlocked!\n";
+            playerLoot->AddLoot(chestLoot);
+        }
+
+        if (playerLoot->getLockPickCount() == 0) {
+            cout << "\nYou have ran out of lockpicks. (Advancing...)\n";
+            ClearInput();
+            WaitForEnter();
+        }
+    }
+};
+
+class Puzzle {
+private:
+    int puzzleType;
+    bool puzzleDone = false;
+    shared_ptr<Player> player;
+
+public:
+    bool getPuzzleDone() { return this->puzzleDone; }
+
+    Puzzle(int type, shared_ptr<Player> player)
+        : puzzleType(type), player(player)
+    {
+    }
+
+    void AttemptPuzzle() {
+        switch (puzzleType) {
+        case 0: { // three pillar puzzle
+            cout << "\nBefore our traveler lies three pillars, each with three symbols on all sides: a whale, a spider and a snake. "
+                << "Engraved on the door our traveler must unlock has the following script: \"The path is bound by twins of the earth, yet only the wanderer of the deep releases the gate.\" "
+                << "Select the face of each pillar in the correct order to proceed, if done wrong, a storm of arrows will be released.\n";
+            WaitForEnter();
+
+            while (!puzzleDone) {
+                int firstPillar = ReadIntInRange(
+                    "\nFace 1 [1 -> Snake, 2 -> Spider, 3 -> Whale]: ", 1, 3);
+                int secondPillar = ReadIntInRange(
+                    "Face 2 [1 -> Snake, 2 -> Spider, 3 -> Whale]: ", 1, 3);
+                int thirdPillar = ReadIntInRange(
+                    "Face 3 [1 -> Snake, 2 -> Spider, 3 -> Whale]: ", 1, 3);
+
+                if (firstPillar == 1 && secondPillar == 1 && thirdPillar == 3) {
+                    puzzleDone = true;
+                    cout << "\nSuccessfully our traveler makes their way deeper into the pits of this labyrinth, however, a chill runs down their back.\n";
+                    ClearInput();
+                    WaitForEnter();
+                }
+                else {
+                    cout << "\nArrows shoot from all throughout the room towards our traveler as the pillars revert back to their original positions dealing some damage.\n";
+                    player->TakeDamage(25);
+                    ClearInput();
+                    WaitForEnter();
+                }
+            }
+            break;
+        }
+        case 1: { // spike door trap
+            cout << "\nIn a hallway leading to the following room our traveler comes across three plates on the ground laid across from one another, from one wall to the other. "
+                << "A trap door of spikes lays patiently on the wall as if waiting to strike.\n";
+            WaitForEnter();
+
+            int plateNumber = ReadIntInRange(
+                "What plate will you walk over? [1 -> left, 2 -> middle, 3 -> right]: ",
+                1, 3);
+
+            if (plateNumber == 1 || plateNumber == 3) {
+                cout << "\nOur traveler carefully steps over the side plate, avoiding the spike wall as it remains still.\n";
+            }
+            else {
+                cout << "\nOur traveler steps over the middle plate, causing the spike wall to spring forward dealing a big chunk of damage before returning to the wall.\n";
+                player->TakeDamage(75);
+            }
+            ClearInput();
+            WaitForEnter();
+            break;
+        }
+        case 2: { // Swinging axes trap
+            int direction;
+
+            random_device rd;
+            mt19937 gen(rd());
+
+            cout << "\nAs our traveler enters the next room, they notice a set of swinging axes blocking the path forward. "
+                << "There seems to be a pattern to their movement, but timing will be crucial to get past them unscathed.\n";
+            WaitForEnter();
+
+            for (int i = 0; i < 3; i++) {
+                direction = ReadIntInRange(
+                    "Select a side to avoid the set of axes [1 -> left, 2 -> right]: ", 1, 2);
+
+                int safeSide = uniform_int_distribution<>(1, 2)(gen);
+                if (direction == safeSide) {
+                    cout << "\nOur traveler swiftly moves to the side, avoiding the swinging axes with ease. ("
+                        << i + 1 << " of 3)\n";
+                }
+                else {
+                    cout << "\nOur traveler misjudges the timing and is struck by the swinging axes, taking significant damage.\n";
+                    player->TakeDamage(50);
+                }
+            }
+            ClearInput();
+            WaitForEnter();
+            break;
+        }
+        }
+        if (!player->IsAlive()) {
+			cout << "\nOur traveler has perished in the depths of this labyrinth...\n";
+		}
+    }
+};
+
+class Room {
+private:
+    shared_ptr<Player> player;
+    vector<shared_ptr<Enemy>> roomEnemies;
+    shared_ptr<Loot> roomLoot;
+    bool playerActed = false;
+
+public:
+    Room(shared_ptr<Player> player, vector<shared_ptr<Enemy>> enemies, shared_ptr<Loot> loot)
+        : player(player), roomEnemies(enemies), roomLoot(loot)
+    {
+    }
+
+    bool AllEnemiesDead() {
+        for (const auto& enemy : roomEnemies) {
+            if (enemy->getCurrentHealth() > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void SortEnemiesByTurn() {
+        for (size_t i = 0; i < roomEnemies.size(); i++) {
+            for (size_t j = 0; j < roomEnemies.size() - i - 1; j++) {
+                if (roomEnemies[j]->getTotalStamina() < roomEnemies[j + 1]->getTotalStamina()) {
+                    swap(roomEnemies[j], roomEnemies[j + 1]);
+                }
+            }
+        }
+    }
+
+    int playerTurn = 1;
+
+    void Battle() {
+        // Sort enemies by stamina before battle begins (higher stamina acts earlier)
+        SortEnemiesByTurn();
+
+        while (!AllEnemiesDead() && player->IsAlive()) {
+            cout << "\n--- Player Turn " << playerTurn << " ---\n";
+
+			player->StatusDamage();
+
+            player->DisplayStats();
+            playerActed = false;
+
+            // Player's turn
+            while (!playerActed && player->IsAlive() && !AllEnemiesDead()) {
+                cout << "\nChoose an action:\n";
+                cout << "1. Attack\n2. Cast Spell\n3. Bag\n4. Inspect\n5. Rest (recover small stamina)\n";
+
+                int choice = ReadIntInRange("Player Action: ", 1, 5);
+
+                switch (choice) {
+                case 1: { // Attack
+                    // Select target
+                    cout << "\nSelect a target:\n";
+                    for (size_t i = 0; i < roomEnemies.size(); ++i) {
+                        int enemyHealth = roomEnemies[i]->getCurrentHealth();
+                        if (enemyHealth < 0) enemyHealth = 0;
+                        cout << i + 1 << ". " << roomEnemies[i]->getEnemyName()
+                            << " (" << enemyHealth << " HP)\n";
+                    }
+                    {
+                        int targetIndex = ReadIntInRange("Target: ", 1, (int)roomEnemies.size());
+                        if (roomEnemies[targetIndex - 1]->getCurrentHealth() > 0) {
+                            player->Attack(roomEnemies[targetIndex - 1]);
+                        }
+                        else {
+                            cout << "\nEnemy already dead.\n";
+                        }
+                    }
+                    playerActed = true;
+                    break;
+                }
+
+                case 2: { // Cast Spell
+                    if (player->getKnownSpells().empty()) {
+                        cout << "\nYou don't know any spells!\n";
+                    }
+                    else {
+                        cout << "\nSelect a spell:\n"
+                            << "1. Firebolt  (Health Damage: 25, Magicka Cost: 43, Status: Ignite)\n"
+                            << "2. Ice Spike (Health Damage: 25, Stamina Damage: 25, Magicka Cost: 48, Status: Frostbite)\n"
+                            << "3. Lightning Bolt (Health Damage: 25, Magicka Damage: 13, Magicka Cost: 51, Status: Shocked)\n"
+                            << "4. Healing (Health Healed: 50, Magicka Cost: 73)\n";
+                        int spellChoice = ReadIntInRange("Player Action: ", 1, 4);
+
+                        shared_ptr<Enemy> noEnemy = nullptr;
+
+                        if (spellChoice == 4) {
+                            player->CastSpell(spellChoice, noEnemy);
+                        }
+                        else {
+                            cout << "\nSelect a target:\n";
+                            for (size_t i = 0; i < roomEnemies.size(); ++i) {
+                                int enemyHealth = roomEnemies[i]->getCurrentHealth();
+                                if (enemyHealth < 0) enemyHealth = 0;
+                                cout << i + 1 << ". " << roomEnemies[i]->getEnemyName()
+                                    << " (" << enemyHealth << " HP)\n";
+                            }
+                            int targetIndex = ReadIntInRange("Target: ", 1, (int)roomEnemies.size());
+                            player->CastSpell(spellChoice, roomEnemies[targetIndex - 1]);
+                        }
+                    }
+                    playerActed = true;
+                    break;
+                }
+
+                case 3: { // Bag
+                    player->getInventory()->DisplayLoot();
+
+                    cout << "\n[1] Use Health Potion\n[2] Use Magicka Potion\n[3] Use Stamina Potion\n[0] Close Bag\n";
+                    int potionType = ReadIntInRange("Player Action: ", 0, 3);
+
+                    if (potionType > 0 && potionType < 4) {
+                        player->UsePotion(potionType - 1);
+                        playerActed = true; 
+                    }
+                    break;
+                }
+
+                case 4: { // Inspect
+                    cout << "\nSelect a target:\n1. Self\n";
+                    for (size_t i = 0; i < roomEnemies.size(); ++i) {
+                        int enemyHealth = roomEnemies[i]->getCurrentHealth();
+                        if (enemyHealth < 0) enemyHealth = 0;
+                        cout << i + 2 << ". " << roomEnemies[i]->getEnemyName()
+                            << " (" << enemyHealth << " HP)\n";
+                    }
+                    int maxOption = static_cast<int>(roomEnemies.size()) + 1;
+                    int targetIndex = ReadIntInRange("Player Action: ", 1, maxOption);
+
+                    if (targetIndex == 1) {
+                        player->DisplayStats();
+                    }
+                    else {
+                        roomEnemies[targetIndex - 2]->DisplayEnemyInfo();
+                    }
+                    // Inspect does NOT consume the turn; player can still act
+                    break;
+                }
+
+                case 5: { // Rest
+                    cout << "\n" << player->getName() << " takes a moment to rest.";
+                    player->Rest();
+                    playerActed = true;
+                    break;
+                }
+
+                default:
+                    cout << "\nInvalid input.\n";
+                    break;
+                }
+            }
+
+            if (AllEnemiesDead() || !player->IsAlive()) {
+                break;
+            }
+
+            playerTurn++;
+
+            // Enemies' turns
+            for (const auto& enemy : roomEnemies) {
+                cout << "\n--- " << enemy->getEnemyName() << "'s Turn ---\n";
+
+                // Skip dead enemies
+                if (enemy->getCurrentHealth() <= 0) {
+                    cout << "\n" << enemy->getEnemyName() << " is dead.\n";
+                    continue;
+                }
+
+                enemy->StatusDamage();
+
+                if (enemy->getCurrentHealth() <= 0) {
+                    cout << "\n" << enemy->getEnemyName() << " is dead.\n";
+                    continue;
+                }
+
+                int enemyDamage = enemy->getEnemyWeapon().getWeaponDamage();
+                bool critHappened = false;
+
+                random_device rd;
+                mt19937 gen(rd());
+
+                int critCheck = uniform_int_distribution<>(1, 10)(gen);
+
+                if (critCheck == 10) {
+                    critHappened = true;
+                    enemyDamage += enemy->getEnemyWeapon().getWeaponCriticalDamage();
+                }
+
+                // Each enemy attacks the player if they have enough stamina
+                bool enemyCanAttack = enemy->getCurrentStamina() > enemy->getEnemyWeapon().getWeaponStaminaCost();
+                bool enemyCanCastSpell = enemy->getEnemySpells().size() > 0;
+
+				if (enemyCanAttack && enemyCanCastSpell) {
+                    int actionChoice = uniform_int_distribution<>(1, 2)(gen);
+                    if (actionChoice == 1) {
+                        player->TakeDamage(enemyDamage);
+                        if (critHappened) {
+                            cout << "\n" << enemy->getEnemyName() << " attacks " << player->getName()
+                                << " for " << enemyDamage << " critical damage!\n";
+                        }
+                        else {
+                            cout << "\n" << enemy->getEnemyName() << " attacks " << player->getName()
+                                << " for " << enemyDamage << " damage!\n";
+                        }
+                    }
+                    else {
+                        int spellIndex = uniform_int_distribution<>(0, static_cast<int>(enemy->getEnemySpells().size()) - 1)(gen);
+                        enemy->CastSpell(player);
+                    }
+                }
+                else if (enemyCanCastSpell) {
+                    int spellIndex = uniform_int_distribution<>(0, static_cast<int>(enemy->getEnemySpells().size()) - 1)(gen);
+                    enemy->CastSpell(player);
+                }
+                else if (enemyCanAttack) {
+                    player->TakeDamage(enemyDamage);
+                    if (critHappened) {
+                        cout << "\n" << enemy->getEnemyName() << " attacks " << player->getName()
+                            << " for " << enemyDamage << " critical damage!\n";
+                    }
+                    else {
+                        cout << "\n" << enemy->getEnemyName() << " attacks " << player->getName()
+                            << " for " << enemyDamage << " damage!\n";
+                    }
+				}
+                else {
+                    enemy->Rest();
+                }
+
+                if (!player->IsAlive()) {
+                    return;
+                }
+            }
+
+            if (!AllEnemiesDead() && player->IsAlive()) {
+                WaitForNextRound();
+            }
+        }
+
+        if (player->IsAlive()) {
+            player->getInventory()->AddLoot(roomLoot);
+        }
+    }
+
+};
+
+void CreateRooms() {
+    random_device rd;
+    mt19937 gen(rd());
+
+    shared_ptr<Loot> playerLoot = make_shared<Loot>(0, 2, 3);
+    shared_ptr<Player> player = make_shared<Player>("Traveler", playerLoot);
+
+    // Entrance
+    cout << "Narrator:\nBleakfalls Barrows; one of many Nordic ruins scattered accross Skyrim. "
+        << "Our traveler has been sent out on a Quest: plunder its depths for the great Dragonstone, along with any other treasures found on their journey. "
+        << "However they should proceed with caution; bandits are a common sight in ruins and the Draugr call it their home. "
+        << "As they climb its steps looking for the entrance, our traveler meets their first test: 3 hungry bandits.\n";
+    WaitForEnter();
+
+    shared_ptr<Enemy> e1e1 = make_shared<Bandit>("Bandit 1");
+    shared_ptr<Enemy> e1e2 = make_shared<Bandit>("Bandit 2");
+    shared_ptr<Enemy> e1e3 = make_shared<Bandit>("Bandit 3");
+
+    vector<shared_ptr<Enemy>> e1et = { e1e1, e1e2, e1e3 };
+
+    shared_ptr<Loot> e1el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        uniform_int_distribution<>(0, 6)(gen),
+        uniform_int_distribution<>(0, 6)(gen)
+    );
+
+    shared_ptr<Room> entrance = make_shared<Room>(player, e1et, e1el);
+    entrance->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << e1el->getGoldCount() << " Gold\n"
+        << "- " << e1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << e1el->getHealthPotionCount() + e1el->getMagickaPotionCount() + e1el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nTaken by surprise by their strength but not by their numbers, our traveler finally makes their way into the ruins unaware of the dangers inside...\n";
+    WaitForEnter();
+
+    // Room 1
+    shared_ptr<Loot> r1l = make_shared<Loot>(
+        uniform_int_distribution<>(0, 12)(gen),
+        uniform_int_distribution<>(0, 2)(gen),
+        uniform_int_distribution<>(0, 2)(gen)
+    );
+
+    cout << "\nEntering the barrows, our traveler is met with a nasty scent that reeks of a familiar smell: death. "
+        << "The entrance is a large hall with clear signs of ruin and lit by a dim light behind a large pillar in the center. "
+        << "There are 2 dead bandits by the entrance.\n";
+    WaitForEnter();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r1l->getGoldCount() << " Gold\n"
+        << "- " << r1l->getLockPickCount() << " Lockpicks\n"
+        << "- " << r1l->getHealthPotionCount() + r1l->getMagickaPotionCount() + r1l->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nAs our traveler approaches the end of the hall, they realize there are 2 bandits camped out. "
+        << "Knowing they must advance deep into the barrows they call out to the foes ahead.\n";
+    WaitForEnter();
+
+    shared_ptr<Enemy> r1e1 = make_shared<Bandit>("Bandit 1");
+    shared_ptr<Enemy> r1e2 = make_shared<Bandit>("Bandit 2");
+
+    vector<shared_ptr<Enemy>> r1et = { r1e1, r1e2 };
+
+    shared_ptr<Loot> r1el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 24)(gen),
+        uniform_int_distribution<>(0, 4)(gen),
+        uniform_int_distribution<>(0, 4)(gen)
+    );
+
+    shared_ptr<Room> room1 = make_shared<Room>(player, r1et, r1el);
+    room1->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r1el->getGoldCount() << " Gold\n"
+        << "- " << r1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r1el->getHealthPotionCount() + r1el->getMagickaPotionCount() + r1el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nWith the bandits dealt with, our traveler notices a chest behind the pillar in the center of the hall. "
+		<< "Approaching it, they see it is locked but with some lockpicks in their inventory they decide to give it a try.\n";
+	WaitForEnter();
+
+    shared_ptr<Chest> chest1 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(12, 24)(gen),
+            uniform_int_distribution<>(0, 4)(gen),
+            uniform_int_distribution<>(0, 4)(gen)
+        ),
+        player->getInventory()
+	);
+
+    chest1->AttemptUnlock();
+
+    cout << "\nNarrator:\nAfter handling the two bandits our traveler makes their way further into the ruins.\n";
+    WaitForEnter();
+
+    // Room 2.1
+    cout << "\nNarrator:\n"
+        << "Exiting the large hall, our traveler makes their way through a twisting hallway with all but one exit covered by rubble."
+        << "The walls are littered with shelves full of old books, embalming equipment and urns."
+        << "A faint voice is heard from the end of the hall, and as our traveler gets closer they meet face to face with another curious bandit.\n";
+	WaitForEnter();
+
+    shared_ptr<Enemy> r2_1e1 = make_shared<Bandit>("Bandit 1");
+
+    shared_ptr<Loot> r2_1el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        uniform_int_distribution<>(0, 2)(gen),
+        uniform_int_distribution<>(0, 2)(gen)
+    );
+
+    vector<shared_ptr<Enemy>> r2_1et = { r2_1e1 };
+
+    shared_ptr<Room> room2_1 = make_shared<Room>(player, r2_1et, r2_1el);
+    room2_1->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r2_1el->getGoldCount() << " Gold\n"
+        << "- " << r2_1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r2_1el->getHealthPotionCount() + r2_1el->getMagickaPotionCount() + r2_1el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nHaving defeated the bandit the room finally comes into foucs.\n";
+	WaitForEnter();
+
+	shared_ptr<Puzzle> puzzle1 = make_shared<Puzzle>(0, player);
+
+	puzzle1->AttemptPuzzle();
+
+    cout << "\nNarrator:\nOur traveler finally proceeds deeper into the barrows, the air growing colder and the darkness thicker. "
+		<< "Suddenly, from the shadows, three skeevers scurry out, their beady eyes glinting with malice.\n";
+	WaitForEnter();
+
+    // Room 2.2
+    shared_ptr<Enemy> r2_2e1 = make_shared<Skeever>("Skeever 1");
+    shared_ptr<Enemy> r2_2e2 = make_shared<Skeever>("Skeever 2");
+    shared_ptr<Enemy> r2_2e3 = make_shared<Skeever>("Skeever 3");
+
+    shared_ptr<Loot> r2_2el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        uniform_int_distribution<>(0, 0)(gen),
+        uniform_int_distribution<>(0, 0)(gen)
+    );
+
+    vector<shared_ptr<Enemy>> r2_2et = { r2_2e1, r2_2e2, r2_2e3 };
+
+    shared_ptr<Room> room2_2 = make_shared<Room>(player, r2_2et, r2_2el);
+    room2_2->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r2_2el->getGoldCount() << " Gold\n"
+        << "- " << r2_2el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r2_2el->getHealthPotionCount() + r2_2el->getMagickaPotionCount() + r2_2el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nSlaying the final skeever finally gives our traveler a chance to glance around the room where they spot another chest and attempt to unlock it for its treasures.\n";
+	WaitForEnter();
+
+    shared_ptr<Chest> chest2 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(12, 24)(gen),
+            uniform_int_distribution<>(0, 6)(gen),
+            uniform_int_distribution<>(0, 6)(gen)
+        ),
+        player->getInventory()
+	);
+
+    chest2->AttemptUnlock();
+
+    cout << "\nNarrator:\nWith the chest looted, our traveler ventures further into the barrows through a set of winding steps. The air growing colder and the shadows deeper.\n";
+	WaitForEnter();
+
+    // Room 3
+    cout << "\nNarrator:\nDescending deeper into the barrows, past a hall covered in webs and corpses our traveler enters a dimly lit chamber where the walls glisten with frost. "
+		<< "Suddenly, from the shadows, a giant Frostbite Spider emerges, its eyes glowing with a menacing light and hairy skin covered in scars.\n";
+	WaitForEnter();
+
+    shared_ptr<Enemy> r3e1 = make_shared<WoundedFrostbiteSpider>("Wounded Frostbite Spider");
+    vector<shared_ptr<Enemy>> r3et = { r3e1 };
+    shared_ptr<Loot> r3el = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        0,
+        0
+    );
+    shared_ptr<Room> room3 = make_shared<Room>(player, r3et, r3el);
+    room3->Battle();
+    cout << "\nLoot Collected:\n"
+        << "- " << r3el->getGoldCount() << " Gold\n"
+        << "- " << r3el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r3el->getHealthPotionCount() + r3el->getMagickaPotionCount() + r3el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+	cout << "\nNarrator:\nWith the spider defeated, our traveler takes a moment to catch their breath before proceeding deeper into the barrows."
+        << "However, they notice the entrance is covered in webs and someone who seems to be tangled up in them, close to death."
+        << "Freeing this person and clearing the entrance they greet you by the name of Arvel the Great."
+		<< "However, before you can ask any questions, he swings his sword at you as he claims the treasures of this place belong to him alone.\n";
+    WaitForEnter();
+
+    shared_ptr<Enemy> arvel = make_shared<BanditOutlaw>("Arvel");
+    vector<shared_ptr<Enemy>> arvelV = { arvel };
+    shared_ptr<Loot> arvelLoot = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        uniform_int_distribution<>(0, 4)(gen),
+        uniform_int_distribution<>(0, 4)(gen)
+    );
+
+    shared_ptr<Room> room3_Arvel = make_shared<Room>(player, arvelV, arvelLoot);
+    room3_Arvel->Battle();
+    cout << "\nLoot Collected:\n"
+        << "- " << arvelLoot->getGoldCount() << " Gold\n"
+        << "- " << arvelLoot->getLockPickCount() << " Lockpicks\n"
+        << "- " << arvelLoot->getHealthPotionCount() + arvelLoot->getMagickaPotionCount() + arvelLoot->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    cout << "\nNarrator:\nDefeating Arvel took a lot out of our traveler but they were able to claim a golden claw that seems to be of very high value.\n";
+    WaitForEnter();
+
+    // Room 4
+    cout << "\nNarrator:\nTraversing through another winding hall our traveler enters some sort of catacombs, coffins lining up the walls like paintings in a mansion."
+        << "However, the noise made by our travelers footsteps is loud enough to awake those who sleep in those very coffins, a group of Draugr slowly make their way forward.\n";
+    WaitForEnter();
+
+    shared_ptr<Enemy> r4e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r4e2 = make_shared<Draugr>("Draugr 2");
+    shared_ptr<Enemy> r4e3 = make_shared<Draugr>("Draugr 3");
+
+    vector<shared_ptr<Enemy>> r4et = { r4e1, r4e2, r4e3 };
+
+    shared_ptr<Loot> r4el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room4 = make_shared<Room>(player, r4et, r4el);
+    room4->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r4el->getGoldCount() << " Gold\n"
+        << "- " << r4el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r4el->getHealthPotionCount() + r4el->getMagickaPotionCount() + r4el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    // Room 4 puzzle (Swinging axes -> type 2)
+    cout << "\nNarrator:\nBeyond the coffins lies a narrow corridor littered with the rusted chains of old traps. Timing will be essential.\n";
+    WaitForEnter();
+    shared_ptr<Puzzle> puzzle4 = make_shared<Puzzle>(2, player);
+    puzzle4->AttemptPuzzle();
+    WaitForEnter();
+
+    // Room 5
+    shared_ptr<Enemy> r5e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r5e2 = make_shared<Draugr>("Draugr 2");
+
+    vector<shared_ptr<Enemy>> r5et = { r5e1, r5e2 };
+
+    shared_ptr<Loot> r5el = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room5 = make_shared<Room>(player, r5et, r5el);
+    room5->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r5el->getGoldCount() << " Gold\n"
+        << "- " << r5el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r5el->getHealthPotionCount() + r5el->getMagickaPotionCount() + r5el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    // Room 5 puzzle (Spike door trap -> type 1)
+    cout << "\nNarrator:\nA small antechamber blocks the way forward; the floor looks suspicious.\n";
+    WaitForEnter();
+    shared_ptr<Puzzle> puzzle5 = make_shared<Puzzle>(1, player);
+    puzzle5->AttemptPuzzle();
+    WaitForEnter();
+
+    // Room 6 - Chest
+    cout << "\nNarrator:\nPassing through a collapsed alcove our traveler notices a battered chest tucked under a fallen slab.\n";
+    WaitForEnter();
+    shared_ptr<Chest> chest6 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(8, 20)(gen),
+            uniform_int_distribution<>(0, 3)(gen),
+            uniform_int_distribution<>(0, 3)(gen)
+        ),
+        player->getInventory()
+    );
+    chest6->AttemptUnlock();
+    cout << "\nNarrator:\nAfter the chest, the passage continues deeper into the tomb.\n";
+    WaitForEnter();
+
+    // Room 7 - Chest
+    cout << "\nNarrator:\nA small side-room contains an ornate chest bound with iron; it hums faintly with trapped energy.\n";
+    WaitForEnter();
+    shared_ptr<Chest> chest7 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(10, 26)(gen),
+            uniform_int_distribution<>(0, 4)(gen),
+            uniform_int_distribution<>(0, 4)(gen)
+        ),
+        player->getInventory()
+    );
+    chest7->AttemptUnlock();
+    cout << "\nNarrator:\nThe corridor narrows and you press on.\n";
+    WaitForEnter();
+
+    // Room 8
+    shared_ptr<Enemy> r8e1 = make_shared<RestlessDraugr>("Restless Draugr");
+
+    vector<shared_ptr<Enemy>> r8et = { r8e1 };
+
+    shared_ptr<Loot> r8el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room8 = make_shared<Room>(player, r8et, r8el);
+    room8->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r8el->getGoldCount() << " Gold\n"
+        << "- " << r8el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r8el->getHealthPotionCount() + r8el->getMagickaPotionCount() + r8el->getStaminaPotionCount() << " Potions\n";
+
+    // Room 8 chest (added)
+    cout << "\nNarrator:\nBehind the restless draugr's sarcophagus sits a locked chest half-covered in cobwebs.\n";
+    WaitForEnter();
+    shared_ptr<Chest> chest8 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(12, 28)(gen),
+            uniform_int_distribution<>(0, 5)(gen),
+            uniform_int_distribution<>(0, 5)(gen)
+        ),
+        player->getInventory()
+    );
+    chest8->AttemptUnlock();
+
+    WaitForEnter();
+
+    // Room 9.1
+    shared_ptr<Enemy> r9_1e1 = make_shared<Draugr>("Draugr 1");
+    shared_ptr<Enemy> r9_1e2 = make_shared<Draugr>("Draugr 2");
+    shared_ptr<Enemy> r9_1e3 = make_shared<Draugr>("Draugr 3");
+
+    vector<shared_ptr<Enemy>> r9_1et = { r9_1e1, r9_1e2, r9_1e3 };
+
+    shared_ptr<Loot> r9_1el = make_shared<Loot>(
+        uniform_int_distribution<>(18, 36)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room9_1 = make_shared<Room>(player, r9_1et, r9_1el);
+    room9_1->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r9_1el->getGoldCount() << " Gold\n"
+        << "- " << r9_1el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r9_1el->getHealthPotionCount() + r9_1el->getMagickaPotionCount() + r9_1el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    // Room 9 puzzle (spike door -> type 1)
+    cout << "\nNarrator:\nA narrow walkway lies ahead with pressure plates scattered across the floor.\n";
+    WaitForEnter();
+    shared_ptr<Puzzle> puzzle9 = make_shared<Puzzle>(1, player);
+    puzzle9->AttemptPuzzle();
+    WaitForEnter();
+
+    // Room 9.2
+    shared_ptr<Enemy> r9_2e1 = make_shared<Draugr>("Draugr");
+    shared_ptr<Enemy> r9_2e2 = make_shared<RestlessDraugr>("Restless Draugr");
+
+    vector<shared_ptr<Enemy>> r9_2et = { r9_2e1, r9_2e2 };
+
+    shared_ptr<Loot> r9_2el = make_shared<Loot>(
+        uniform_int_distribution<>(12, 24)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room9_2 = make_shared<Room>(player, r9_2et, r9_2el);
+    room9_2->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r9_2el->getGoldCount() << " Gold\n"
+        << "- " << r9_2el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r9_2el->getHealthPotionCount() + r9_2el->getMagickaPotionCount() + r9_2el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    // Room 10
+    shared_ptr<Enemy> r10e1 = make_shared<DraugrScourgeLord>("Draugr Scourge Lord");
+
+    vector<shared_ptr<Enemy>> r10et = { r10e1 };
+
+    shared_ptr<Loot> r10el = make_shared<Loot>(
+        uniform_int_distribution<>(6, 12)(gen),
+        0,
+        0
+    );
+
+    shared_ptr<Room> room10 = make_shared<Room>(player, r10et, r10el);
+    room10->Battle();
+
+    cout << "\nLoot Collected:\n"
+        << "- " << r10el->getGoldCount() << " Gold\n"
+        << "- " << r10el->getLockPickCount() << " Lockpicks\n"
+        << "- " << r10el->getHealthPotionCount() + r10el->getMagickaPotionCount() + r10el->getStaminaPotionCount() << " Potions\n";
+    WaitForEnter();
+
+    // Room 10 chest (final)
+    cout << "\nNarrator:\nAt the heart of the chamber, guarded by the Scourge Lord, sits a heavily bound chest. Its secrets may finally be yours.\n";
+    WaitForEnter();
+    shared_ptr<Chest> chest10 = make_shared<Chest>(
+        make_shared<Loot>(
+            uniform_int_distribution<>(24, 48)(gen),
+            uniform_int_distribution<>(0, 6)(gen),
+            uniform_int_distribution<>(0, 6)(gen)
+        ),
+        player->getInventory()
+    );
+    chest10->AttemptUnlock();
+    WaitForEnter();
+
+    cout << "\nNarrator:\nWith the Draugr Scourge Lord defeated and the Dragonstone in hand, our traveler steps back into the light of Skyrim, forever changed by the depths of Bleak Falls Barrow.\n";
+    WaitForEnter();
+}
