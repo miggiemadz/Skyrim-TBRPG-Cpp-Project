@@ -58,22 +58,52 @@ and combat encounters are generated dynamically.
 
 ## Quick start — Build & Run
 
-The project includes a Visual Studio solution and a single main C++ file.
+This project is a single-file C++ program located at "Final Project/Final Project.cpp". It is written for C++17. Below are simple build-and-run instructions for Windows, macOS, and Linux using common toolchains. Adjust commands for your environment and compiler install locations.
 
-Linux / macOS (g++):
-```bash
-# from repository root
-g++ -std=c++17 -o bleakfalls "Final Project/Final Project.cpp"
-./bleakfalls
-```
+Windows
 
-Windows (Visual Studio):
-- Open `Final Project/Final Project.sln` in Visual Studio (solution is provided).
-- Build and run the project from the IDE.
+- Visual Studio (recommended):
+  1. Open Final Project/Final Project.sln in Visual Studio.
+  2. Select the desired configuration (Release or Debug) and platform (x64).
+  3. Build the solution (Build > Build Solution or Ctrl+Shift+B).
+  4. Run from the IDE (Debug > Start Debugging or F5) or run the generated executable from the project's output folder (e.g., "Debug\Final Project.exe" or "x64\Release\Final Project.exe").
 
-Note: The single-source file is located at `Final Project/Final Project.cpp`. Depending
-on your environment you might need to set console encoding or window size to improve
-display.
+- MinGW / MinGW-w64 (g++):
+  1. Install MingW-w64 and add it to your PATH (or use MSYS2).
+  2. From a Command Prompt or MSYS2 shell, run:
+     g++ -std=c++17 -O2 -o bleakfalls.exe "Final Project/Final Project.cpp"
+  3. Run:
+     .\bleakfalls.exe
+
+macOS
+
+- clang++ (default macOS toolchain):
+  1. Open Terminal and run:
+     clang++ -std=c++17 -O2 -o bleakfalls "Final Project/Final Project.cpp"
+  2. Run:
+     ./bleakfalls
+
+- g++ (Homebrew gcc) — optional if you prefer GNU g++:
+  1. Install GCC via Homebrew: brew install gcc
+  2. Use the brewed g++ (replace X with the major version, e.g., g++-12):
+     g++-X -std=c++17 -O2 -o bleakfalls "Final Project/Final Project.cpp"
+  3. Run:
+     ./bleakfalls
+
+Linux
+
+- GNU g++ (common on Linux):
+  1. Install build-essential (Debian/Ubuntu) or equivalent for your distro.
+  2. From the repository root run:
+     g++ -std=c++17 -O2 -o bleakfalls "Final Project/Final Project.cpp"
+  3. Run:
+     ./bleakfalls
+
+Notes and tips
+
+- If compilation fails due to missing features, ensure your compiler supports C++17 and use a recent toolchain.
+- The program uses console I/O. On Windows, you may need to adjust the terminal's font and window size for best display.
+- If you prefer an easier cross-platform workflow, consider adding a small Makefile or CMakeLists.txt (I can add one if you'd like).
 
 ---
 
