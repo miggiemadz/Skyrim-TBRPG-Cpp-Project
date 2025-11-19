@@ -226,11 +226,11 @@ public:
             this->weaponCriticalBoost = 2;
             this->weaponStaminaCost = 5;
             break;
-        default:
-            this->weaponName = "Fists";
-            this->weaponDamage = 1;
-            this->weaponCriticalBoost = 0;
-            this->weaponStaminaCost = 0;
+        case 19:
+            this->weaponName = "Claws";
+            this->weaponDamage = 4;
+            this->weaponCriticalBoost = 2;
+            this->weaponStaminaCost = 5;
             break;
         }
     }
@@ -731,6 +731,8 @@ public:
         this->currentHealth = totalHealth;
         this->currentMagicka = totalMagicka;
         this->currentStamina = totalStamina;
+
+        this->enemyWeapon = Weapon(19);
     }
 };
 
